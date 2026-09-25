@@ -1,0 +1,93 @@
+{% extends "_base.html" %}
+{% block title %}Section 65B(4) Certificate — {{ case_id }}{% endblock %}
+{% block doc_type %}Section 65B(4) Evidence Certificate{% endblock %}
+{% block content %}
+<h1>Certificate under Section 65B(4), Indian Evidence Act, 1872</h1>
+<div class="subtitle">Case {{ case_id }} &middot; Operation {{ operation_id }}</div>
+
+<p>
+    I, the undersigned examiner, certify as follows in respect of the
+    electronic record(s) identified below, for the purpose of Section
+    65B(4) of the Indian Evidence Act, 1872, read with Section 63 of the
+    Bharatiya Sakshya Adhiniyam, 2023, as applicable:
+</p>
+
+<h2>1. Identification of the Electronic Record / Device</h2>
+<div class="field-grid">
+    <div><div class="field-label">Case ID</div><div class="field-value mono">{{ case_id }}</div></div>
+    <div><div class="field-label">Operation ID</div><div class="field-value mono">{{ operation_id }}</div></div>
+    <div><div class="field-label">Evidence ID(s)</div>
+        <div class="field-value mono">
+            {% if evidence_ids %}{{ evidence_ids | join(', ') }}{% else %}Not available in this build{% endif %}
+        </div></div>
+    <div><div class="field-label">Device</div>
+        <div class="field-value">
+            {% if device_info and device_info.make is defined %}{{ device_info.make }} {{ device_info.model }} ({{ device_info.serial }}){% else %}Not available in this build{% endif %}
+        </div></div>
+</div>
+
+<h2>2. Manner of Production / Extraction</h2>
+<p>
+    The electronic record(s) referred to above were produced/extracted using
+    REFORGE (tool version {{ tool_version }}), employing forensically sound,
+    read-only acquisition procedures as recorded in the operation timeline
+    below. The device used to produce this record was operated correctly and
+    was, throughout the relevant period, functioning properly.
+</p>
+
+<h2>3. Declaration of Non-Alteration</h2>
+<div class="callout">
+    I declare that the process described above did not, in any manner, alter
+    the original electronic record. Integrity of the resulting record chain
+    is independently verifiable via SHA-256 hash chaining internal to this
+    tool.
+    {% if integrity.intact %}
+        As of the date of this certificate, that hash chain is
+        <strong>intact</strong> across {{ integrity.entries_checked }}
+        recorded entries for this case.
+    {% else %}
+        <strong>As of the date of this certificate, a break was detected in
+        that hash chain at entry {{ integrity.break_at_entry_id }}. This
+        certificate should not be relied upon until the discrepancy is
+        investigated and resolved.</strong>
+    {% endif %}
+</div>
+
+<h2>4. Operation Timeline (supporting record)</h2>
+{% if audit_trail %}
+<table>
+    <thead><tr><th>Timestamp</th><th>Action</th><th>Description</th><th>Result</th></tr></thead>
+    <tbody>
+        {% for entry in audit_trail %}
+        <tr>
+            <td class="mono">{{ entry.timestamp }}</td>
+            <td>{{ entry.action_type }}</td>
+            <td>{{ entry.description }}</td>
+            <td>{{ entry.result }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="placeholder-note">No audit entries recorded for this case yet.</p>
+{% endif %}
+
+<h2>5. Examiner Declaration</h2>
+<p>
+    I state that the above is true to the best of my knowledge and belief,
+    and that no facts have been concealed which, if disclosed, would affect
+    the significance of the above statements.
+</p>
+
+<div class="field-grid">
+    <div><div class="field-label">Examiner Name</div><div class="field-value">{{ examiner_name }}</div></div>
+    <div><div class="field-label">Designation</div>
+        <div class="field-value">{{ examiner_designation | default("Not available in this build") }}</div></div>
+    <div><div class="field-label">Date</div><div class="field-value mono">{{ generated_at }}</div></div>
+</div>
+
+<div class="signature-block">
+    <div><div class="signature-line">Signature of Examiner</div></div>
+    <div><div class="signature-line">Place</div></div>
+</div>
+{% endblock %}

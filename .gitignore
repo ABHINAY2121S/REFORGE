@@ -1,0 +1,17 @@
+node_modules/
+dist/
+src-tauri/target/
+src-tauri/binaries/
+*.pyd
+*.so
+*.dll
+reforge.db
+reforge_reports/
+*.log
+*.tmp
+.env
+.env.local
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/

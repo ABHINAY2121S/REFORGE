@@ -1,0 +1,32 @@
+/*
+  REFORGE dark theme tokens. If a shared theme file already exists
+  elsewhere in the app, delete this file and import that one instead —
+  the class names below only depend on these custom property NAMES, not
+  on this file being the source of truth.
+*/
+:root {
+  --bg: #10151b;
+  --surface: #171e27;
+  --surface-raised: #1d2530;
+  --border: #2a3542;
+  --text: #eaf0f6;
+  --text-muted: #8fa0b3;
+  --accent: #2fbfa4;
+  --accent-dim: #1f6f5c;
+  --danger: #e2626c;
+  --warning: #e6b955;
+  --success: #5fca85;
+  --info: #93a3ea;
+
+  --font-ui: -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+}

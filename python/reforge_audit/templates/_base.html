@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}REFORGE Report{% endblock %}</title>
+<style>
+    /*
+      IMPORTANT: This stylesheet is intentionally a LIGHT, high-contrast,
+      print-friendly layout — NOT the REFORGE dark app theme (bg #10151B
+      etc). PDFs are meant to be printed and read on paper (forensic
+      evidence, legal certificates), so a dark background here would be
+      wrong, not an inconsistency to "fix" by matching the app's dark UI.
+      The dark theme applies to the on-screen Audit & Reports screen only.
+    */
+    @page {
+        size: A4;
+        margin: 22mm 18mm;
+        @bottom-center {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 8pt;
+            color: #6B7684;
+        }
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: 'Helvetica Neue', Arial, sans-serif;
+        color: #1A2028;
+        font-size: 10.5pt;
+        line-height: 1.45;
+        margin: 0;
+    }
+    .mono {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 9pt;
+        word-break: break-all;
+    }
+    header.doc-header {
+        border-bottom: 2.5pt solid #1F6F5C;
+        padding-bottom: 10pt;
+        margin-bottom: 16pt;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+    header.doc-header .brand {
+        font-size: 15pt;
+        font-weight: 700;
+        letter-spacing: 0.5pt;
+        color: #14251F;
+    }
+    header.doc-header .doc-type {
+        font-size: 10pt;
+        text-transform: uppercase;
+        letter-spacing: 1pt;
+        color: #1F6F5C;
+        font-weight: 600;
+    }
+    h1 { font-size: 15pt; margin: 0 0 4pt 0; color: #14251F; }
+    h2 {
+        font-size: 11.5pt;
+        color: #14251F;
+        border-bottom: 0.75pt solid #D3DAE1;
+        padding-bottom: 3pt;
+        margin: 18pt 0 8pt 0;
+    }
+    .subtitle { color: #55606C; font-size: 9.5pt; margin-bottom: 14pt; }
+    table { width: 100%; border-collapse: collapse; margin: 6pt 0 12pt 0; }
+    th, td {
+        text-align: left;
+        padding: 5pt 7pt;
+        border-bottom: 0.5pt solid #E1E6EA;
+        font-size: 9.5pt;
+        vertical-align: top;
+    }
+    th {
+        background: #F1F4F6;
+        font-weight: 600;
+        color: #33404A;
+        text-transform: uppercase;
+        font-size: 8pt;
+        letter-spacing: 0.4pt;
+    }
+    .field-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4pt 18pt;
+        margin: 8pt 0 14pt 0;
+    }
+    .field-grid .field-label {
+        font-size: 8pt;
+        text-transform: uppercase;
+        letter-spacing: 0.4pt;
+        color: #6B7684;
+    }
+    .field-grid .field-value { font-size: 10pt; color: #1A2028; margin-bottom: 6pt; }
+    .status-pill {
+        display: inline-block;
+        padding: 2pt 8pt;
+        border-radius: 10pt;
+        font-size: 8.5pt;
+        font-weight: 600;
+    }
+    .status-success { background: #E4F6EC; color: #1E7A45; }
+    .status-warning { background: #FCF1DC; color: #8A5A05; }
+    .status-blocked, .status-danger { background: #FBE7E9; color: #9B2632; }
+    .status-info { background: #E9ECFB; color: #35408A; }
+    .callout {
+        border-left: 3pt solid #1F6F5C;
+        background: #F3F8F6;
+        padding: 8pt 12pt;
+        margin: 10pt 0;
+        font-size: 9.5pt;
+    }
+    .callout.warning { border-left-color: #B4790A; background: #FDF5E7; }
+    .placeholder-note {
+        color: #8A5A05;
+        font-style: italic;
+        font-size: 9pt;
+    }
+    footer.doc-footer {
+        margin-top: 24pt;
+        padding-top: 8pt;
+        border-top: 0.75pt solid #D3DAE1;
+        font-size: 8pt;
+        color: #6B7684;
+        display: flex;
+        justify-content: space-between;
+    }
+    .signature-block {
+        margin-top: 26pt;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20pt;
+    }
+    .signature-line {
+        border-top: 0.75pt solid #33404A;
+        margin-top: 30pt;
+        padding-top: 4pt;
+        font-size: 8.5pt;
+        color: #55606C;
+    }
+</style>
+{% block extra_style %}{% endblock %}
+</head>
+<body>
+<header class="doc-header">
+    <div class="brand">REFORGE</div>
+    <div class="doc-type">{% block doc_type %}Report{% endblock %}</div>
+</header>
+
+{% block content %}{% endblock %}
+
+<footer class="doc-footer">
+    <span>Generated {{ generated_at }} &middot; {{ tool_version }}</span>
+    <span>Case {{ case_id }} &middot; Operation {{ operation_id }}</span>
+</footer>
+</body>
+</html>

@@ -1,0 +1,109 @@
+{% extends "_base.html" %}
+{% block title %}Forensic Report — {{ case_id }}{% endblock %}
+{% block doc_type %}Forensic Report{% endblock %}
+{% block content %}
+<h1>Forensic Recovery &amp; Chain-of-Custody Report</h1>
+<div class="subtitle">Case {{ case_id }} &middot; Operation {{ operation_id }}</div>
+
+<div class="field-grid">
+    <div>
+        <div class="field-label">Examiner</div>
+        <div class="field-value">{{ examiner_name }}</div>
+    </div>
+    <div>
+        <div class="field-label">Report Generated</div>
+        <div class="field-value mono">{{ generated_at }}</div>
+    </div>
+</div>
+
+<h2>Recovered File List</h2>
+{% if recovered_files %}
+<table>
+    <thead>
+        <tr><th>File</th><th>Type</th><th>Confidence</th><th>SHA-256</th></tr>
+    </thead>
+    <tbody>
+        {% for f in recovered_files %}
+        <tr>
+            <td>{{ f.name }}</td>
+            <td>{{ f.file_type }}</td>
+            <td>{{ f.confidence }}</td>
+            <td class="mono">{{ f.sha256 }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="placeholder-note">
+    Recovered-file data is owned by the Recovery module and was not available
+    when this report was generated (no context provider registered). This
+    section will populate once Verification/Audit is wired to Recovery's
+    scan results by the integration step.
+</p>
+{% endif %}
+
+<h2>Operation Timeline (Audit Trail)</h2>
+{% if audit_trail %}
+<table>
+    <thead>
+        <tr><th>Timestamp</th><th>Action</th><th>Description</th><th>Result</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+        {% for entry in audit_trail %}
+        <tr>
+            <td class="mono">{{ entry.timestamp }}</td>
+            <td>{{ entry.action_type }}</td>
+            <td>{{ entry.description }}</td>
+            <td>{{ entry.result }}</td>
+            <td><span class="status-pill status-{{ entry.status }}">{{ entry.status }}</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="placeholder-note">No audit entries recorded for this case yet.</p>
+{% endif %}
+
+<h2>Chain of Custody</h2>
+{% if custody_events %}
+<table>
+    <thead>
+        <tr><th>Timestamp</th><th>Evidence</th><th>Event</th><th>From</th><th>To</th><th>Location</th><th>Reason</th></tr>
+    </thead>
+    <tbody>
+        {% for c in custody_events %}
+        <tr>
+            <td class="mono">{{ c.timestamp }}</td>
+            <td class="mono">{{ c.evidence_id }}</td>
+            <td>{{ c.event_type }}</td>
+            <td>{{ c.from_person }}</td>
+            <td>{{ c.to_person }}</td>
+            <td>{{ c.location }}</td>
+            <td>{{ c.reason }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="placeholder-note">No chain-of-custody events found for evidence referenced in this case.</p>
+{% endif %}
+
+<h2>Integrity Verification</h2>
+<div class="callout {% if not integrity.intact %}warning{% endif %}">
+    {% if integrity.intact %}
+        Hash chain intact — {{ integrity.entries_checked }} case entries verified with no breaks.
+    {% else %}
+        Hash chain BROKEN at entry <span class="mono">{{ integrity.break_at_entry_id }}</span>.
+        This report's underlying audit data may not be trustworthy — investigate immediately.
+    {% endif %}
+</div>
+
+<div class="signature-block">
+    <div>
+        <div class="signature-line">Examiner Signature</div>
+    </div>
+    <div>
+        <div class="signature-line">Date</div>
+    </div>
+</div>
+{% endblock %}

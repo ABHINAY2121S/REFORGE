@@ -1,0 +1,362 @@
+@import "./tokens.css";
+
+.audit-screen {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Top status strip ---- */
+.status-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.status-strip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(95, 202, 133, 0.18);
+}
+.status-strip.broken .dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 3px rgba(226, 98, 108, 0.18);
+}
+.status-strip .sep {
+  color: var(--text-muted);
+}
+.status-strip .count {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+.status-strip .chain-state {
+  font-weight: 600;
+}
+.status-strip.broken .chain-state {
+  color: var(--danger);
+}
+.status-strip:not(.broken) .chain-state {
+  color: var(--success);
+}
+
+/* ---- Tabs ---- */
+.tab-bar {
+  display: flex;
+  gap: var(--space-1);
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.tab-bar button {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  font-family: var(--font-ui);
+  padding: var(--space-3) var(--space-3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.tab-bar button:hover {
+  color: var(--text);
+}
+.tab-bar button.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.tab-panel {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-5);
+}
+
+/* ---- Status pill (icon + label, never color alone) ---- */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+.status-pill.success { background: rgba(95, 202, 133, 0.14); color: var(--success); }
+.status-pill.warning { background: rgba(230, 185, 85, 0.14); color: var(--warning); }
+.status-pill.blocked { background: rgba(226, 98, 108, 0.14); color: var(--danger); }
+.status-pill.info    { background: rgba(147, 163, 234, 0.14); color: var(--info); }
+
+/* ---- Generic data table ---- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th {
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
+.data-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.data-table tbody tr {
+  cursor: pointer;
+}
+.data-table tbody tr:hover {
+  background: var(--surface);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---- Filter bar ---- */
+.filter-bar {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+.filter-bar input[type="text"],
+.filter-bar select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-family: var(--font-ui);
+}
+.filter-bar input[type="text"] {
+  min-width: 220px;
+}
+
+/* ---- Cards (Activity Timeline) ---- */
+.day-group-label {
+  color: var(--text-muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin: var(--space-5) 0 var(--space-2) 0;
+}
+.timeline-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-2);
+  cursor: pointer;
+}
+.timeline-card:hover {
+  border-color: var(--accent-dim);
+}
+.timeline-card .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+}
+.timeline-card .desc {
+  font-size: 13.5px;
+}
+.timeline-card .meta {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+.timeline-card .failure-box {
+  margin-top: var(--space-3);
+  background: rgba(230, 185, 85, 0.08);
+  border: 1px solid rgba(230, 185, 85, 0.35);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* ---- Integrity Check ---- */
+.integrity-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.integrity-hero.intact { border-color: rgba(95, 202, 133, 0.4); }
+.integrity-hero.broken { border-color: rgba(226, 98, 108, 0.4); }
+.integrity-hero .headline {
+  font-size: 20px;
+  font-weight: 700;
+}
+.integrity-hero.intact .headline { color: var(--success); }
+.integrity-hero.broken .headline { color: var(--danger); }
+.integrity-hero .sub {
+  color: var(--text-muted);
+  font-size: 13.5px;
+}
+
+/* ---- Reusable field grid (Chain of Custody header, etc.) ---- */
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+/* ---- Chain of custody ---- */
+.custody-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: var(--space-5);
+  height: 100%;
+}
+.evidence-list {
+  border-right: 1px solid var(--border);
+  overflow: auto;
+}
+.evidence-list-item {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 13px;
+}
+.evidence-list-item:hover { background: var(--surface); }
+.evidence-list-item.active {
+  background: var(--surface-raised);
+  border-left: 3px solid var(--accent);
+}
+.custody-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.custody-step {
+  position: relative;
+  padding: var(--space-3) 0 var(--space-3) var(--space-5);
+  border-left: 2px solid var(--border);
+  margin-left: 6px;
+}
+.custody-step::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: var(--space-3);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+}
+.custody-step .event-type {
+  text-transform: capitalize;
+  font-weight: 600;
+}
+
+/* ---- Report generation ---- */
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+.report-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+.report-card h3 {
+  margin: 0 0 var(--space-1) 0;
+  font-size: 14px;
+}
+.report-card p {
+  color: var(--text-muted);
+  font-size: 12.5px;
+  margin: 0 0 var(--space-3) 0;
+}
+.report-card .actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.btn {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--accent-dim); }
+.btn.primary {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  color: #eafffa;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---- Detail panel (drawer) ---- */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 50;
+}
+.detail-panel {
+  width: 380px;
+  height: 100%;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  padding: var(--space-5);
+  overflow: auto;
+}
+.detail-panel h2 {
+  font-size: 16px;
+  margin: 0 0 var(--space-4) 0;
+}
+.detail-panel .field {
+  margin-bottom: var(--space-3);
+}
+.detail-panel .field-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+.detail-panel .close-btn {
+  float: right;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+}

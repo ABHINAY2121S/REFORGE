@@ -1,0 +1,25 @@
+[package]
+name = "reforge-app"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.77"
+
+# See https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "reforge_app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.0.6", features = [] }
+
+[dependencies]
+tauri = { version = "2.5.0", features = ["protocol-asset"] }
+tauri-plugin-shell = "2.2.0"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[features]
+# This feature is used for production builds or when a developer does not
+# want to use devtools. It is not part of the default build.
+custom-protocol = ["tauri/custom-protocol"]

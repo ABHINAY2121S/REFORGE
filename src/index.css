@@ -1,0 +1,228 @@
+/* REFORGE Design System — CSS custom properties
+ * Section 4 color tokens, typography scale, and global resets.
+ * NEVER hard-code hex values in component files — always use these variables.
+ */
+
+/* ── Google Fonts — loaded from bundled assets (offline-safe) ── */
+/* Fonts are self-hosted in /public/fonts/ — no external network call. */
+/* @import url('/fonts/inter.css'); */
+
+:root {
+  /* Color tokens (Section 4) */
+  --bg-base: #10151b;
+  --surface: #171e27;
+  --surface-elevated: #1e2733;
+  --border: #2a3542;
+  --text-primary: #eaf0f6;
+  --text-secondary: #8fa0b3;
+  --accent-teal: #2fbfa4;
+  --danger-red: #e2626c;
+  --warning-amber: #e6b955;
+  --success-green: #5fca85;
+  --info-indigo: #93a3ea;
+
+  /* Typography — two named classes only: text-sans and text-mono */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", "Fira Code", "Consolas", monospace;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Sidebar */
+  --sidebar-width: 240px;
+
+  /* Transition */
+  --transition-fast: 120ms ease;
+  --transition-normal: 200ms ease;
+}
+
+/* ── Global reset ─────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Typography utility classes ───────────────────────────────── */
+
+.text-sans {
+  font-family: var(--font-sans);
+}
+
+/* Used for: hashes, serials, timestamps, file paths, technical IDs */
+.text-mono {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  letter-spacing: 0.01em;
+}
+
+/* ── Status pills — always pair color with a shape/icon (colorblind) ── */
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pill--success  { background: rgba(95, 202, 133, 0.15); color: var(--success-green); }
+.pill--warning  { background: rgba(230, 185, 85, 0.15);  color: var(--warning-amber); }
+.pill--danger   { background: rgba(226, 98, 108, 0.15);  color: var(--danger-red); }
+.pill--info     { background: rgba(147, 163, 234, 0.15); color: var(--info-indigo); }
+.pill--blocked  { background: rgba(226, 98, 108, 0.15);  color: var(--danger-red); }
+.pill--teal     { background: rgba(47, 191, 164, 0.15);  color: var(--accent-teal); }
+
+/* ── Layout ───────────────────────────────────────────────────── */
+
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-base);
+}
+
+.app-main {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-8) 36px;
+  min-width: 0;
+  background-color: var(--bg-base);
+}
+
+/* ── Cards / surfaces ─────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+}
+
+.card--elevated {
+  background: var(--surface-elevated);
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+
+/* ONE primary button per screen max — enforced by design review. */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px var(--space-5);
+  background: var(--accent-teal);
+  color: #0a1018;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.btn-primary:hover  { background: #25a88e; }
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* Danger — ONLY for destructive erase actions. Never decorative. */
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 10px var(--space-5);
+  background: var(--danger-red);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+}
+.btn-danger:hover  { background: #ca4f58; }
+.btn-danger:active { transform: translateY(1px); }
+.btn-danger:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 9px var(--space-5);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.btn-secondary:hover { background: var(--surface-elevated); border-color: var(--text-secondary); }
+.btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Form elements ────────────────────────────────────────────── */
+
+input[type="text"],
+input[type="password"],
+select {
+  width: 100%;
+  padding: 10px var(--space-3);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+input:focus, select:focus {
+  border-color: var(--accent-teal);
+}
+
+input::placeholder {
+  color: var(--text-secondary);
+}
+
+/* ── Scrollbars ───────────────────────────────────────────────── */
+
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }

@@ -1,0 +1,86 @@
+{% extends "_base.html" %}
+{% block title %}Certificate of Sanitization — {{ case_id }}{% endblock %}
+{% block doc_type %}Certificate of Sanitization{% endblock %}
+{% block extra_style %}
+<style>
+    .cert-frame {
+        border: 1.5pt solid #1F6F5C;
+        padding: 18pt;
+        margin-top: 6pt;
+    }
+    .cert-title {
+        text-align: center;
+        font-size: 16pt;
+        font-weight: 700;
+        color: #14251F;
+        margin-bottom: 2pt;
+    }
+    .cert-subtitle {
+        text-align: center;
+        font-size: 9pt;
+        color: #55606C;
+        margin-bottom: 16pt;
+    }
+    .qr-block {
+        display: flex;
+        align-items: center;
+        gap: 16pt;
+        margin-top: 14pt;
+        padding-top: 12pt;
+        border-top: 0.75pt solid #D3DAE1;
+    }
+    .qr-block img { width: 80pt; height: 80pt; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="cert-frame">
+    <div class="cert-title">Certificate of Sanitization</div>
+    <div class="cert-subtitle">
+        Issued per NIST SP 800-88 Rev.2 media sanitization guidance
+    </div>
+
+    <div class="field-grid">
+        <div><div class="field-label">Device Make / Model</div>
+            <div class="field-value">{{ device_info.make | default("Not available in this build") }} {{ device_info.model | default("") }}</div></div>
+        <div><div class="field-label">Serial Number</div>
+            <div class="field-value mono">{{ device_info.serial | default("Not available in this build") }}</div></div>
+        <div><div class="field-label">Media Type</div>
+            <div class="field-value">{{ device_info.media_type | default("Not available in this build") }}</div></div>
+        <div><div class="field-label">Sanitization Method</div>
+            <div class="field-value">{{ device_info.method | default("Not available in this build") }} ({{ device_info.method_category | default("Clear/Purge/Destroy — not available") }})</div></div>
+        <div><div class="field-label">Standard Reference</div>
+            <div class="field-value">NIST SP 800-88 Rev.2 / IEEE 2883</div></div>
+        <div><div class="field-label">Verification Result</div>
+            <div class="field-value">
+                {% if integrity.intact %}
+                    <span class="status-pill status-success">Verified — hash chain intact</span>
+                {% else %}
+                    <span class="status-pill status-blocked">Unverified — chain break detected</span>
+                {% endif %}
+            </div></div>
+        <div><div class="field-label">Operator</div>
+            <div class="field-value">{{ examiner_name }}</div></div>
+        <div><div class="field-label">Date / Time</div>
+            <div class="field-value mono">{{ generated_at }}</div></div>
+        <div><div class="field-label">Tool Version</div>
+            <div class="field-value">{{ tool_version }}</div></div>
+        <div><div class="field-label">Case / Operation</div>
+            <div class="field-value mono">{{ case_id }} / {{ operation_id }}</div></div>
+    </div>
+
+    <div class="qr-block">
+        {% if qr_code_path %}
+        <img src="file://{{ qr_code_path }}" alt="QR code encoding verification hash">
+        {% endif %}
+        <div>
+            <div class="field-label">Verification Hash (QR-encoded)</div>
+            <div class="field-value mono">{{ verification_hash }}</div>
+        </div>
+    </div>
+
+    <div class="signature-block">
+        <div><div class="signature-line">Operator Signature</div></div>
+        <div><div class="signature-line">Supervisor Signature (if required)</div></div>
+    </div>
+</div>
+{% endblock %}

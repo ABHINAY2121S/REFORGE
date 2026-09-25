@@ -1,0 +1,83 @@
+{% extends "_base.html" %}
+{% block title %}Erasure Report — {{ case_id }}{% endblock %}
+{% block doc_type %}Erasure Report{% endblock %}
+{% block content %}
+<h1>Erasure Report</h1>
+<div class="subtitle">Case {{ case_id }} &middot; Operation {{ operation_id }}</div>
+
+<h2>Device</h2>
+{% if device_info and device_info.make is defined %}
+<div class="field-grid">
+    <div><div class="field-label">Make / Model</div><div class="field-value">{{ device_info.make }} {{ device_info.model }}</div></div>
+    <div><div class="field-label">Serial</div><div class="field-value mono">{{ device_info.serial }}</div></div>
+    <div><div class="field-label">Media Type</div><div class="field-value">{{ device_info.media_type }}</div></div>
+    <div><div class="field-label">Capacity</div><div class="field-value">{{ device_info.capacity }}</div></div>
+</div>
+{% else %}
+<p class="placeholder-note">
+    Device details are owned by the Erase module and were not available when
+    this report was generated (no context provider registered).
+</p>
+{% endif %}
+
+<h2>Method(s) Used</h2>
+{% if erase_methods %}
+<table>
+    <thead><tr><th>Attempt</th><th>Method</th><th>Outcome</th><th>Notes</th></tr></thead>
+    <tbody>
+        {% for m in erase_methods %}
+        <tr>
+            <td>{{ loop.index }}{% if m.is_fallback %} (fallback){% endif %}</td>
+            <td>{{ m.method }}</td>
+            <td><span class="status-pill status-{{ m.status }}">{{ m.outcome }}</span></td>
+            <td>{{ m.notes }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="placeholder-note">
+    Method/fallback history is owned by the Erase module (Adaptive Sanitization
+    Fallback log) and was not available when this report was generated.
+</p>
+{% endif %}
+
+<h2>Entropy Measurements</h2>
+<div class="field-grid">
+    <div><div class="field-label">Before Erase</div>
+        <div class="field-value">{{ entropy_before if entropy_before is not none else "Not available in this build" }}</div></div>
+    <div><div class="field-label">After Erase</div>
+        <div class="field-value">{{ entropy_after if entropy_after is not none else "Not available in this build" }}</div></div>
+</div>
+
+<h2>Adversarial Verification Result</h2>
+<div class="callout {% if not integrity.intact %}warning{% endif %}">
+    {% if integrity.intact %}
+        Hash chain intact — {{ integrity.entries_checked }} case entries verified, including
+        the post-erase verification scan logged by the Erase module.
+    {% else %}
+        Hash chain BROKEN at entry <span class="mono">{{ integrity.break_at_entry_id }}</span>.
+        Treat this erasure record as unverified until investigated.
+    {% endif %}
+</div>
+
+<h2>Complete Erase Log (Audit Trail)</h2>
+{% if audit_trail %}
+<table>
+    <thead><tr><th>Timestamp</th><th>Action</th><th>Description</th><th>Result</th><th>Status</th></tr></thead>
+    <tbody>
+        {% for entry in audit_trail %}
+        <tr>
+            <td class="mono">{{ entry.timestamp }}</td>
+            <td>{{ entry.action_type }}</td>
+            <td>{{ entry.description }}</td>
+            <td>{{ entry.result }}</td>
+            <td><span class="status-pill status-{{ entry.status }}">{{ entry.status }}</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="placeholder-note">No audit entries recorded for this case yet.</p>
+{% endif %}
+{% endblock %}
