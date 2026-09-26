@@ -233,34 +233,48 @@ input::placeholder {
 /* ── Print styles — only the document content, no sidebar/UI chrome ── */
 
 @media print {
-  /* Hide sidebar, forensic assistant, top action buttons */
+  @page {
+    margin: 12mm;
+    size: auto;
+  }
+
+  /* Hide sidebar, forensic assistant, top action buttons, tabs */
   .sidebar-no-print,
   .forensic-assistant-root,
-  .no-print {
+  .no-print,
+  button {
     display: none !important;
   }
 
   /* Let the main content fill full width */
   .app-shell {
     display: block !important;
+    background: #ffffff !important;
   }
 
   .app-main {
     padding: 0 !important;
+    margin: 0 !important;
     overflow: visible !important;
+    background: #ffffff !important;
   }
 
   html, body, #root {
     height: auto !important;
     overflow: visible !important;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Ensure report document prints cleanly */
+  #certificate-print-area,
   .report-print-area {
     width: 100% !important;
-    max-width: none !important;
+    max-width: 100% !important;
     box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
+    border: 1px solid #DDE3EA !important;
+    padding: 24px !important;
+    margin: 0 !important;
   }
 }

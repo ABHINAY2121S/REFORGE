@@ -48,17 +48,17 @@ export function ChainOfCustodyTab({ caseId }: { caseId?: string }) {
         {selected ? (
           <>
             <div className="field-grid" style={{ marginBottom: 20 }}>
-              <div>
-                <div className="field-label">SHA-256</div>
-                <div className="mono">{selected.sha256}</div>
+              <div style={{ backgroundColor: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                <div className="field-label" style={{ fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>SHA-256</div>
+                <div className="mono" style={{ fontSize: 11, wordBreak: 'break-all', overflowWrap: 'anywhere', color: 'var(--text)', lineHeight: 1.4 }}>{selected.sha256}</div>
               </div>
-              <div>
-                <div className="field-label">MD5</div>
-                <div className="mono">{selected.md5}</div>
+              <div style={{ backgroundColor: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                <div className="field-label" style={{ fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>MD5</div>
+                <div className="mono" style={{ fontSize: 11, wordBreak: 'break-all', overflowWrap: 'anywhere', color: 'var(--text)', lineHeight: 1.4 }}>{selected.md5}</div>
               </div>
-              <div>
-                <div className="field-label">Case</div>
-                <div className="mono">{selected.case_id}</div>
+              <div style={{ backgroundColor: 'var(--surface)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
+                <div className="field-label" style={{ fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>Case</div>
+                <div className="mono" style={{ fontSize: 13, color: 'var(--text)' }}>{selected.case_id}</div>
               </div>
             </div>
 

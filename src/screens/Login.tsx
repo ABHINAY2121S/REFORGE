@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { UserRole } from '../types';
 import { IconShieldCheck, IconEye } from '../components/Icons';
 
+import reforgeLogoUrl from '../assets/reforge-logo.png';
+
 interface LoginProps {
   onLogin: (role: UserRole, name: string) => void;
   authError?: string;
@@ -45,27 +47,12 @@ export default function Login({ onLogin, authError = '' }: LoginProps) {
     >
       <div style={{ width: '100%', maxWidth: 440 }}>
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 12,
-              backgroundColor: '#1E8F7A',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 14,
-            }}
-          >
-            <IconShieldCheck size={28} className="text-white" style={{ color: '#fff', stroke: '#fff' }} />
-          </div>
-          <div style={{ fontWeight: 800, fontSize: 24, color: '#0F172A', letterSpacing: '-0.02em' }}>
-            REFORGE
-          </div>
-          <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginTop: 4 }}>
-            Digital Forensics & Data Recovery
-          </div>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <img
+            src={reforgeLogoUrl}
+            alt="REFORGE Forensic Recovery & Sanitization"
+            style={{ width: 220, maxWidth: '80%', height: 'auto', display: 'inline-block', marginBottom: 6 }}
+          />
         </div>
 
         {/* Card */}

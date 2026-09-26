@@ -14,6 +14,7 @@ import {
   OperationRecord,
   CustodyRecord
 } from '../operationsStore';
+import reforgeLogoUrl from '../assets/reforge-logo.png';
 
 interface ReportsProps {
   navigate: (screen: Screen) => void;
@@ -259,7 +260,7 @@ export default function ReportsAndCertificates({
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 60 }}>
       {/* Screen Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div className="no-print" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A2330', letterSpacing: '-0.02em', margin: 0 }}>
@@ -306,7 +307,7 @@ export default function ReportsAndCertificates({
       </div>
 
       {/* Conditional Document Tabs */}
-      <div style={{
+      <div className="no-print" style={{
         display: 'flex', flexWrap: 'wrap', gap: 8, padding: 4, backgroundColor: '#E9EEF4', borderRadius: 10,
         marginBottom: 24, width: 'fit-content'
       }}>
@@ -348,7 +349,7 @@ export default function ReportsAndCertificates({
         const curTab = tabs.find(t => t.id === activeDoc);
         if (curTab && !curTab.isAvailable) {
           return (
-            <div style={{
+            <div className="no-print" style={{
               backgroundColor: '#FFFFFF', borderRadius: 12, border: '1.5px solid #CBD5E1',
               padding: '36px', textAlign: 'center', marginBottom: 24
             }}>
@@ -389,6 +390,7 @@ export default function ReportsAndCertificates({
       {tabs.find(t => t.id === activeDoc)?.isAvailable && (
         <div
           id="certificate-print-area"
+          className="report-print-area"
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: 12,
@@ -416,15 +418,14 @@ export default function ReportsAndCertificates({
             position: 'relative', zIndex: 1
           }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: 10, backgroundColor: '#1E8F7A',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                  <IconShieldCheck size={26} style={{ stroke: '#FFFFFF', color: '#FFFFFF' }} />
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <img
+                  src={reforgeLogoUrl}
+                  alt="REFORGE"
+                  style={{ height: 48, width: 'auto', display: 'block' }}
+                />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', color: '#1E8F7A', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#1E8F7A', textTransform: 'uppercase' }}>
                     REFORGE DIGITAL FORENSICS AUTHORITY
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: '#1A2330', letterSpacing: '-0.02em', marginTop: 2 }}>
