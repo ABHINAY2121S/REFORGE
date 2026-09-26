@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Screen, UserRole } from '../types';
 import {
-  IconHardDrive, IconSearch, IconShieldLock, IconPlus, IconCheck, IconActivity, IconAlertTriangle, IconInfo
+  IconHardDrive, IconSearch, IconShieldLock, IconPlus, IconCheck, IconActivity, IconAlertTriangle, IconInfo, IconDocument
 } from '../components/Icons';
 
 interface CasesProps {
@@ -343,18 +343,36 @@ export default function Cases({ navigate, userRole }: CasesProps) {
               }}
             >
               {/* Header */}
-              <div style={{ padding: '22px 24px', borderBottom: '1px solid #DDE3EA' }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#1A2330', marginBottom: 4 }}>
-                  {selectedCase.name}
+              <div style={{ padding: '22px 24px', borderBottom: '1px solid #DDE3EA', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#1A2330', marginBottom: 4 }}>
+                    {selectedCase.name}
+                  </div>
+                  <div style={{ fontSize: 13, color: '#647184', marginBottom: 10 }}>
+                    {selectedCase.description}
+                  </div>
+                  <div style={{ display: 'flex', gap: 20, fontSize: 12, color: '#647184' }}>
+                    <span>Case: <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#1A2330' }}>#{selectedCase.id}</span></span>
+                    <span>Opened: <span style={{ color: '#1A2330' }}>{selectedCase.opened}</span></span>
+                    <span>Assigned to: <span style={{ color: '#1A2330' }}>{selectedCase.assignee}</span></span>
+                  </div>
                 </div>
-                <div style={{ fontSize: 13, color: '#647184', marginBottom: 10 }}>
-                  {selectedCase.description}
-                </div>
-                <div style={{ display: 'flex', gap: 20, fontSize: 12, color: '#647184' }}>
-                  <span>Case: <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#1A2330' }}>#{selectedCase.id}</span></span>
-                  <span>Opened: <span style={{ color: '#1A2330' }}>{selectedCase.opened}</span></span>
-                  <span>Assigned to: <span style={{ color: '#1A2330' }}>{selectedCase.assignee}</span></span>
-                </div>
+
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('reforge:view_document', { detail: { caseId: selectedCase.id } }));
+                    navigate('reports');
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+                    borderRadius: 7, border: '1.5px solid #1E8F7A', backgroundColor: '#EDFAF3',
+                    color: '#1E8F7A', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+                    fontFamily: 'Inter, system-ui, sans-serif'
+                  }}
+                >
+                  <IconDocument size={14} style={{ stroke: '#1E8F7A' }} />
+                  View Reports & Certificates
+                </button>
               </div>
 
               {/* Devices */}

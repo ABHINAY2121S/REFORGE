@@ -89,13 +89,109 @@ const confidenceConfig = {
   low: { label: 'Low', bg: '#F5F7FA', color: '#647184' },
 };
 
-const confidenceBreakdown = [
-  { label: 'Signature Match', value: 92, color: '#2E9E5B' },
-  { label: 'Structural Validity', value: 88, color: '#1E8F7A' },
-  { label: 'Decoder Success', value: 100, color: '#4C5FC7' },
-  { label: 'Contiguity', value: 71, color: '#B8862E' },
-  { label: 'Metadata Match', value: 85, color: '#1E8F7A' },
-];
+function getConfidenceBreakdown(file: any) {
+  if (!file) {
+    return [
+      { label: 'Signature Match', value: 92, color: '#2E9E5B' },
+      { label: 'Structural Validity', value: 88, color: '#1E8F7A' },
+      { label: 'Decoder Success', value: 100, color: '#4C5FC7' },
+      { label: 'Contiguity', value: 71, color: '#B8862E' },
+      { label: 'Metadata Match', value: 85, color: '#1E8F7A' },
+    ];
+  }
+
+  const name = (file.name || '').toLowerCase();
+  const ext = name.split('.').pop() || '';
+  const conf = file.confidence || 'high';
+
+  if (name.includes('contract') || (ext === 'pdf' && conf === 'high')) {
+    return [
+      { label: 'Signature Match', value: 99, color: '#2E9E5B' },
+      { label: 'Structural Validity', value: 96, color: '#1E8F7A' },
+      { label: 'Decoder Success', value: 100, color: '#4C5FC7' },
+      { label: 'Contiguity', value: 94, color: '#2E9E5B' },
+      { label: 'Metadata Match', value: 92, color: '#1E8F7A' },
+    ];
+  }
+
+  if (name.includes('financial') || name.includes('q3') || ext === 'xlsx') {
+    return [
+      { label: 'Signature Match', value: 94, color: '#2E9E5B' },
+      { label: 'Structural Validity', value: 90, color: '#1E8F7A' },
+      { label: 'Decoder Success', value: 100, color: '#4C5FC7' },
+      { label: 'Contiguity', value: 81, color: '#B8862E' },
+      { label: 'Metadata Match', value: 86, color: '#1E8F7A' },
+    ];
+  }
+
+  if (name.includes('unnamed') || file.multiCandidate || ext === 'jpg' || ext === 'jpeg') {
+    return [
+      { label: 'Signature Match', value: 89, color: '#2E9E5B' },
+      { label: 'Structural Validity', value: 74, color: '#B8862E' },
+      { label: 'Decoder Success', value: 82, color: '#4C5FC7' },
+      { label: 'Contiguity', value: 61, color: '#B8862E' },
+      { label: 'Metadata Match', value: 38, color: '#C6394A' },
+    ];
+  }
+
+  if (name.includes('email') || ext === 'pst') {
+    return [
+      { label: 'Signature Match', value: 96, color: '#2E9E5B' },
+      { label: 'Structural Validity', value: 93, color: '#1E8F7A' },
+      { label: 'Decoder Success', value: 99, color: '#4C5FC7' },
+      { label: 'Contiguity', value: 88, color: '#2E9E5B' },
+      { label: 'Metadata Match', value: 94, color: '#1E8F7A' },
+    ];
+  }
+
+  if (ext === 'txt' || conf === 'low') {
+    return [
+      { label: 'Signature Match', value: 46, color: '#C6394A' },
+      { label: 'Structural Validity', value: 52, color: '#B8862E' },
+      { label: 'Decoder Success', value: 60, color: '#B8862E' },
+      { label: 'Contiguity', value: 41, color: '#C6394A' },
+      { label: 'Metadata Match', value: 33, color: '#C6394A' },
+    ];
+  }
+
+  if (ext === 'zip' || conf === 'medium') {
+    return [
+      { label: 'Signature Match', value: 82, color: '#2E9E5B' },
+      { label: 'Structural Validity', value: 76, color: '#B8862E' },
+      { label: 'Decoder Success', value: 79, color: '#4C5FC7' },
+      { label: 'Contiguity', value: 68, color: '#B8862E' },
+      { label: 'Metadata Match', value: 58, color: '#B8862E' },
+    ];
+  }
+
+  if (ext === 'docx') {
+    return [
+      { label: 'Signature Match', value: 95, color: '#2E9E5B' },
+      { label: 'Structural Validity', value: 92, color: '#1E8F7A' },
+      { label: 'Decoder Success', value: 100, color: '#4C5FC7' },
+      { label: 'Contiguity', value: 89, color: '#2E9E5B' },
+      { label: 'Metadata Match', value: 87, color: '#1E8F7A' },
+    ];
+  }
+
+  const base = conf === 'high' ? 88 : conf === 'medium' ? 70 : 45;
+  const hashVal = (file.name || '').length * 7;
+  const sMatch = Math.min(99, base + (hashVal % 10));
+  const sValid = Math.min(99, base - 4 + ((hashVal * 3) % 11));
+  const sDec = conf === 'high' ? 100 : Math.min(95, base + ((hashVal * 2) % 12));
+  const sCont = Math.min(99, base - 8 + ((hashVal * 5) % 14));
+  const sMeta = Math.min(99, base - 6 + ((hashVal * 7) % 15));
+
+  const getColor = (v: number) => v >= 85 ? '#2E9E5B' : v >= 65 ? '#B8862E' : '#C6394A';
+
+  return [
+    { label: 'Signature Match', value: sMatch, color: getColor(sMatch) },
+    { label: 'Structural Validity', value: sValid, color: getColor(sValid) },
+    { label: 'Decoder Success', value: sDec, color: '#4C5FC7' },
+    { label: 'Contiguity', value: sCont, color: getColor(sCont) },
+    { label: 'Metadata Match', value: sMeta, color: getColor(sMeta) },
+  ];
+}
 
 const fileTypeColors: Record<string, string> = {
   xlsx: '#2E9E5B', pdf: '#C6394A', jpg: '#B8862E', jpeg: '#B8862E', pst: '#4C5FC7',
@@ -1129,7 +1225,7 @@ export default function Recovery({ device, navigate, initialTargetPaths }: Recov
                   </div>
                 )}
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#0F172A', letterSpacing: '0.04em', marginBottom: 10 }}>CONFIDENCE SCORE</div>
-                {confidenceBreakdown.map((item) => (
+                {getConfidenceBreakdown(selectedFile).map((item) => (
                   <div key={item.label} style={{ marginBottom: 10 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>{item.label}</span>

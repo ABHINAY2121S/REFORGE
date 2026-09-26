@@ -27,6 +27,13 @@ interface ReportsProps {
 
 export type DocTabType = 'forensic' | 'erasure' | 'section65b' | 'sanitization' | 'custody';
 
+const CASE_OPTIONS = [
+  { id: '2024-CF-0892', name: 'Case #2024-CF-0892: State v. Meridian Corp', shortTitle: 'State v. Meridian Corp' },
+  { id: '2024-CF-0887', name: 'Case #2024-CF-0887: Internal HR Investigation — R. Sharma', shortTitle: 'Internal HR Investigation' },
+  { id: '2024-CF-0884', name: 'Case #2024-CF-0884: Procurement Fraud Investigation', shortTitle: 'Procurement Fraud Investigation' },
+  { id: '2024-CF-0880', name: 'Case #2024-CF-0880: Ex-employee IP Theft', shortTitle: 'Ex-employee IP Theft' },
+];
+
 export default function ReportsAndCertificates({
   navigate,
   userName = 'Special Agent Rao',
@@ -34,7 +41,7 @@ export default function ReportsAndCertificates({
   initialDoc,
   operationId,
 }: ReportsProps) {
-  const caseId = '2024-CF-0892';
+  const [selectedCaseId, setSelectedCaseId] = useState('2024-CF-0892');
   const [liveDevice, setLiveDevice] = useState<Device | null>(null);
   const [copiedHash, setCopiedHash] = useState(false);
   const [operations, setOperations] = useState<OperationRecord[]>([]);
@@ -49,9 +56,9 @@ export default function ReportsAndCertificates({
     }).catch(() => {});
 
     const loadOps = () => {
-      const ops = getOperationsForCase(caseId);
+      const ops = getOperationsForCase(selectedCaseId);
       setOperations(ops);
-      setCustodyEvents(getCustodyRecords(caseId));
+      setCustodyEvents(getCustodyRecords(selectedCaseId));
     };
 
     loadOps();
@@ -62,27 +69,31 @@ export default function ReportsAndCertificates({
       if (e.detail?.docType) {
         setActiveDoc(e.detail.docType as DocTabType);
       }
+      if (e.detail?.caseId) {
+        setSelectedCaseId(e.detail.caseId);
+      }
     }) as EventListener);
 
     return () => {
       window.removeEventListener('reforge:operation_completed', handleOpCompleted);
     };
-  }, []);
+  }, [selectedCaseId]);
 
-  const recoveryOp = getCompletedRecovery(caseId);
-  const eraseOp = getCompletedErase(caseId);
-  const verifiedEraseOp = getVerifiedErase(caseId);
+  const recoveryOp = getCompletedRecovery(selectedCaseId);
+  const eraseOp = getCompletedErase(selectedCaseId);
+  const verifiedEraseOp = getVerifiedErase(selectedCaseId);
+  const selectedCaseObj = CASE_OPTIONS.find(c => c.id === selectedCaseId) || { id: selectedCaseId, name: `Case #${selectedCaseId}`, shortTitle: `Case #${selectedCaseId}` };
 
   // Availability flags
   const isForensicAvailable = Boolean(recoveryOp);
   const isSection65bAvailable = Boolean(recoveryOp);
   const isErasureAvailable = Boolean(eraseOp);
   const isSanitizationAvailable = Boolean(verifiedEraseOp);
-  const hasAnyDocuments = isForensicAvailable || isErasureAvailable || isSection65bAvailable || isSanitizationAvailable;
+  const hasAnyDocuments = isForensicAvailable || isErasureAvailable || isSection65bAvailable || isSanitizationAvailable || (custodyEvents && custodyEvents.length > 0);
 
   // Active document selection
   const defaultDoc: DocTabType = initialDoc as DocTabType ||
-    (isForensicAvailable ? 'forensic' : isErasureAvailable ? 'erasure' : isSanitizationAvailable ? 'sanitization' : 'forensic');
+    (isForensicAvailable ? 'forensic' : isSanitizationAvailable ? 'sanitization' : isErasureAvailable ? 'erasure' : 'custody');
   const [activeDoc, setActiveDoc] = useState<DocTabType>(defaultDoc);
 
   // If initialDoc prop changed, update
@@ -92,20 +103,20 @@ export default function ReportsAndCertificates({
     }
   }, [initialDoc]);
 
-  // Clean hardware serial formatting (NO trailing period)
-  const rawSerial = (liveDevice?.serial || recoveryOp?.deviceSerial || eraseOp?.deviceSerial || 'E823_8FA6_BF53_0001_001B_448B_4A85_2466');
+  // Clean hardware serial formatting
+  const rawSerial = (recoveryOp?.deviceSerial || eraseOp?.deviceSerial || liveDevice?.serial || 'E823_8FA6_BF53_0001_001B_448B_4A85_2466');
   const cleanSerial = rawSerial.trim().replace(/\.+$/, '');
 
-  const targetDeviceModel = liveDevice?.name || recoveryOp?.deviceModel || eraseOp?.deviceModel || 'WD PC SN810 SDCPNRY-512G-1006';
-  const targetCapacity = liveDevice?.capacity || recoveryOp?.deviceCapacity || eraseOp?.deviceCapacity || '512.00 GB';
-  const targetInterface = liveDevice?.interface || recoveryOp?.deviceInterface || eraseOp?.deviceInterface || 'NVMe / PCIe';
+  const targetDeviceModel = recoveryOp?.deviceModel || eraseOp?.deviceModel || liveDevice?.name || 'WD PC SN810 SDCPNRY-512G-1006';
+  const targetCapacity = recoveryOp?.deviceCapacity || eraseOp?.deviceCapacity || liveDevice?.capacity || '512.00 GB';
+  const targetInterface = recoveryOp?.deviceInterface || eraseOp?.deviceInterface || liveDevice?.interface || 'NVMe / PCIe';
 
   // Resolved operation IDs
   const activeOpId = activeDoc === 'forensic' || activeDoc === 'section65b'
     ? (recoveryOp?.operationId || operationId || 'REC-2026-0042')
     : (eraseOp?.operationId || operationId || 'ERASE-2026-0017');
 
-  const sha256Seal = eraseOp?.sha256Seal || '9f2c1a7e4b8d3f0a6c5e2b1d8a4f7c3e0b6d9a2f5c8e1b4d7a0f3c6e9b2d5a81';
+  const sha256Seal = eraseOp?.sha256Seal || recoveryOp?.sha256Seal || '9f2c1a7e4b8d3f0a6c5e2b1d8a4f7c3e0b6d9a2f5c8e1b4d7a0f3c6e9b2d5a81';
 
   const handleCopyHash = () => {
     navigator.clipboard.writeText(sha256Seal);
@@ -121,8 +132,8 @@ export default function ReportsAndCertificates({
     const docData = {
       documentType: activeDoc,
       operationId: activeOpId,
-      caseId,
-      caseName: activeCaseName,
+      caseId: selectedCaseId,
+      caseName: selectedCaseObj.name,
       examiner: userName,
       device: {
         model: targetDeviceModel,
@@ -145,73 +156,6 @@ export default function ReportsAndCertificates({
     URL.revokeObjectURL(url);
   };
 
-  // ── Fresh Case Empty State ────────────────────────────────────────────────
-  if (!hasAnyDocuments) {
-    return (
-      <div style={{ maxWidth: 860, margin: '0 auto', paddingBottom: 60 }}>
-        {/* Screen Header */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A2330', letterSpacing: '-0.02em', margin: 0 }}>
-            Reports & Certificates
-          </h1>
-          <p style={{ fontSize: 14, color: '#647184', marginTop: 4 }}>
-            Official forensic documentation with SHA-256 cryptographic ledger seal for court admissibility.
-          </p>
-        </div>
-
-        <div style={{
-          backgroundColor: '#FFFFFF', borderRadius: 12, border: '1.5px solid #CBD5E1',
-          padding: '48px 36px', textAlign: 'center', boxShadow: '0 2px 8px rgba(15,23,42,0.05)',
-        }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: '50%', backgroundColor: '#F1F5F9',
-            border: '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', margin: '0 auto 18px',
-          }}>
-            <IconDocument size={28} style={{ stroke: '#475569' }} />
-          </div>
-
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#0F172A', marginBottom: 8 }}>
-            No documents available yet.
-          </div>
-          <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.6, maxWidth: 520, margin: '0 auto 28px' }}>
-            Reports and formal certificates are generated automatically when a <strong>Recovery</strong> or <strong>Erase</strong> operation completes on this case and device.
-          </p>
-
-          <div style={{ display: 'flex', gap: 14, justifyContent: 'center' }}>
-            <button
-              onClick={() => navigate('recovery')}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 22px',
-                borderRadius: 8, border: 'none', backgroundColor: '#0D9488', color: '#FFFFFF',
-                fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
-                boxShadow: '0 2px 6px rgba(13,148,136,0.3)',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0F766E')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0D9488')}
-            >
-              <IconSearch size={16} style={{ stroke: '#fff' }} />
-              Start Data Recovery
-            </button>
-            <button
-              onClick={() => navigate('erase')}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 22px',
-                borderRadius: 8, border: '1.5px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#0F172A',
-                fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F1F5F9')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FFFFFF')}
-            >
-              <IconShieldLock size={16} style={{ stroke: '#C6394A' }} />
-              Start Drive Sanitization
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ── Document Tabs Configuration ───────────────────────────────────────────
   const tabs: Array<{
     id: DocTabType;
@@ -224,28 +168,28 @@ export default function ReportsAndCertificates({
       id: 'forensic',
       label: 'Forensic Report',
       isAvailable: isForensicAvailable,
-      unavailableReason: 'Not available — no completed recovery operation exists for this case.',
+      unavailableReason: `Not available — no completed recovery operation exists for Case #${selectedCaseId}.`,
       kind: 'Report',
     },
     {
       id: 'erasure',
       label: 'Erasure Report',
       isAvailable: isErasureAvailable,
-      unavailableReason: 'Not available — no erase operation has been performed on this device.',
+      unavailableReason: `Not available — no drive erase operation has been performed for Case #${selectedCaseId}.`,
       kind: 'Report',
     },
     {
       id: 'section65b',
       label: '§65B(4) Evidence Certificate',
       isAvailable: isSection65bAvailable,
-      unavailableReason: 'Not available — no completed recovery operation exists for this case.',
+      unavailableReason: `Not available — no completed forensic recovery exists for Case #${selectedCaseId}.`,
       kind: 'Certificate',
     },
     {
       id: 'sanitization',
       label: 'Certificate of Sanitization',
       isAvailable: isSanitizationAvailable,
-      unavailableReason: 'Not available — no verified erase operation has been performed on this device.',
+      unavailableReason: `Not available — no verified sanitization operation has been recorded for Case #${selectedCaseId}.`,
       kind: 'Certificate',
     },
     {
@@ -260,7 +204,7 @@ export default function ReportsAndCertificates({
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 60 }}>
       {/* Screen Header */}
-      <div className="no-print" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A2330', letterSpacing: '-0.02em', margin: 0 }}>
@@ -279,7 +223,34 @@ export default function ReportsAndCertificates({
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          {/* Active Case Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: '#FFFFFF', padding: '6px 12px', borderRadius: 8, border: '1.5px solid #DDE3EA' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#647184', textTransform: 'uppercase' }}>CASE:</span>
+            <select
+              value={selectedCaseId}
+              onChange={(e) => {
+                const newCaseId = e.target.value;
+                setSelectedCaseId(newCaseId);
+                const newRec = getCompletedRecovery(newCaseId);
+                const newErase = getVerifiedErase(newCaseId) || getCompletedErase(newCaseId);
+                if (newRec && !newErase) setActiveDoc('forensic');
+                else if (newErase && !newRec) setActiveDoc('sanitization');
+                else if (newRec && newErase) setActiveDoc('forensic');
+                else setActiveDoc('custody');
+              }}
+              style={{
+                border: 'none', background: 'transparent', outline: 'none',
+                fontSize: 13, fontWeight: 600, color: '#0F172A', cursor: 'pointer',
+                fontFamily: 'Inter, system-ui, sans-serif'
+              }}
+            >
+              {CASE_OPTIONS.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
           <button
             onClick={handleExportJSON}
             style={{
@@ -470,7 +441,7 @@ export default function ReportsAndCertificates({
             }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#647184', textTransform: 'uppercase' }}>Case Identifier</div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#1A2330', marginTop: 2 }}>#{caseId}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#1A2330', marginTop: 2 }}>#{selectedCaseId}</div>
               </div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#647184', textTransform: 'uppercase' }}>Investigating Agency</div>
