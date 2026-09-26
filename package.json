@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/ensure-port.js",
+    "pretauri": "node scripts/ensure-port.js",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",

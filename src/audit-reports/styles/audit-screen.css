@@ -230,13 +230,15 @@
 /* ---- Chain of custody ---- */
 .custody-layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 220px 1fr;
   gap: var(--space-5);
-  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 .evidence-list {
   border-right: 1px solid var(--border);
-  overflow: auto;
+  overflow-y: auto;
+  max-height: 480px;
 }
 .evidence-list-item {
   padding: var(--space-3);
@@ -253,6 +255,9 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  overflow-y: auto;
+  max-height: 480px;
+  padding-bottom: var(--space-4);
 }
 .custody-step {
   position: relative;

@@ -1,0 +1,11 @@
+src-tauri/
+node_modules/
+python/
+reforge.db
+reforge_reports/
+*.log
+*.tmp
+__pycache__/
+*.py[cod]
+.git/
+seed_real_device_audit.py

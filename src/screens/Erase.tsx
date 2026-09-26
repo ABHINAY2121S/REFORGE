@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Device, Screen } from '../types';
+import { recordEraseCompleted } from '../operationsStore';
 import {
   IconShieldLock, IconShieldCheck, IconCheck, IconAlertTriangle,
-  IconInfo, IconChevronDown, IconChevronUp, IconArrowRight, IconActivity, IconCertificate, IconRefresh
+  IconInfo, IconChevronDown, IconChevronUp, IconArrowRight, IconActivity, IconCertificate, IconRefresh, IconHardDrive
 } from '../components/Icons';
 
 interface EraseProps {
@@ -192,10 +193,36 @@ export default function Erase({ device, navigate }: EraseProps) {
           setTimeout(() => {
             // USP 5: first attempt with unreliable device fails
             if (simulateFail && attemptNumRef.current === 1) {
-              setAttempts(prev => [...prev, { attemptNum: attemptNumRef.current, method: currentMethod, result: 'failed' }]);
+              const recAttempts = [{ attemptNum: attemptNumRef.current, method: currentMethod, result: 'failed' as const }];
+              setAttempts(recAttempts);
+              if (device) {
+                recordEraseCompleted({
+                  caseId: '2024-CF-0892',
+                  caseName: 'State v. Meridian Corp',
+                  device,
+                  selectedMethod,
+                  methodLabel: currentMethod,
+                  status: 'failed',
+                  entropy: 7.201,
+                  attempts: recAttempts,
+                });
+              }
               setStep('failed');
             } else {
-              setAttempts(prev => [...prev, { attemptNum: attemptNumRef.current, method: currentMethod, result: 'success' }]);
+              const recAttempts = [{ attemptNum: attemptNumRef.current, method: currentMethod, result: 'success' as const }];
+              setAttempts(recAttempts);
+              if (device) {
+                recordEraseCompleted({
+                  caseId: '2024-CF-0892',
+                  caseName: 'State v. Meridian Corp',
+                  device,
+                  selectedMethod,
+                  methodLabel: currentMethod,
+                  status: 'verified',
+                  entropy: 7.998,
+                  attempts: recAttempts,
+                });
+              }
               setStep('verified');
             }
           }, 400);
@@ -221,20 +248,76 @@ export default function Erase({ device, navigate }: EraseProps) {
   // Method label lookup
   const methodLabel = (id: string) => eraseMethods.find(m => m.id === id)?.label ?? id;
 
+  // ── No Device Selected View ───────────────────────────────────────────────
+  if (!device) {
+    return (
+      <div>
+        <div style={{ marginBottom: 6 }}>
+          <div style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
+            Drive Sanitization
+          </div>
+          <div style={{ fontSize: 14, color: '#334155', fontWeight: 500, marginTop: 4 }}>
+            NIST 800-88 Rev. 2 & DoD 5220.22-M media purge and crypto-erase.
+          </div>
+        </div>
+
+        <div style={{ height: 1, backgroundColor: '#CBD5E1', margin: '20px 0 28px' }} />
+
+        <div style={{
+          backgroundColor: '#FFFFFF', borderRadius: 12, border: '1.5px solid #CBD5E1',
+          padding: '40px 32px', maxWidth: 640,
+          boxShadow: '0 2px 8px rgba(15,23,42,0.06)', textAlign: 'center',
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%', backgroundColor: '#F1F5F9',
+            border: '1.5px solid #CBD5E1', display: 'flex', alignItems: 'center',
+            justifyContent: 'center', margin: '0 auto 18px',
+          }}>
+            <IconHardDrive size={28} style={{ stroke: '#0F172A' }} />
+          </div>
+
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#0F172A', marginBottom: 8 }}>
+            No Target Storage Device Selected
+          </div>
+          <p style={{ fontSize: 14, color: '#334155', lineHeight: 1.6, maxWidth: 480, margin: '0 auto 24px', fontWeight: 500 }}>
+            Sanitization and media wiping require selecting an active secondary or external target drive. Please select a device from the Devices tab to proceed.
+          </p>
+
+          <button
+            onClick={() => navigate('devices')}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 24px',
+              borderRadius: 8, border: 'none', backgroundColor: '#0D9488', color: '#FFFFFF',
+              fontWeight: 700, fontSize: 14, cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
+              boxShadow: '0 2px 6px rgba(13,148,136,0.3)',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0F766E')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0D9488')}
+          >
+            Go to Devices
+            <IconArrowRight size={15} style={{ stroke: '#fff' }} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+
+
   return (
     <div>
       <div style={{ marginBottom: 6 }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: '#1A2330', letterSpacing: '-0.02em' }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>
           Erase
         </div>
-        <div style={{ fontSize: 13, color: '#647184', marginTop: 3 }}>
-          {deviceName}
-          <span style={{ margin: '0 6px', color: '#DDE3EA' }}>·</span>
-          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}>{deviceSerial}</span>
+        <div style={{ fontSize: 13, color: '#334155', fontWeight: 500, marginTop: 3 }}>
+          <strong style={{ color: '#0F172A' }}>{deviceName}</strong>
+          <span style={{ margin: '0 8px', color: '#CBD5E1' }}>·</span>
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: '#334155' }}>{deviceSerial}</span>
         </div>
       </div>
 
-      <div style={{ height: 1, backgroundColor: '#DDE3EA', margin: '18px 0 24px' }} />
+      <div style={{ height: 1, backgroundColor: '#CBD5E1', margin: '18px 0 24px' }} />
 
       {/* USP 5: Attempt history bar above stepper */}
       {attempts.length > 0 && <AttemptHistory attempts={attempts} />}
@@ -244,6 +327,22 @@ export default function Erase({ device, navigate }: EraseProps) {
       {/* CONFIGURE */}
       {step === 'configure' && (
         <div style={{ maxWidth: 600 }}>
+          {device.isSystemDrive && (
+            <div style={{
+              backgroundColor: '#EFF6FF', border: '1.5px solid #93C5FD', borderRadius: 10,
+              padding: '14px 18px', marginBottom: 18, display: 'flex', gap: 12, alignItems: 'flex-start',
+            }}>
+              <IconShieldCheck size={20} style={{ stroke: '#2563EB', flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#1E40AF', marginBottom: 2 }}>
+                  Host System Drive (Live OS) — Erase Protocol Active
+                </div>
+                <div style={{ fontSize: 12, color: '#1E3A8A', lineHeight: 1.5 }}>
+                  Target: <strong>{deviceName}</strong> ({device.capacity} · {device.interface}). Sanitization pipeline is unlocked for this device. You can configure purge methods, confirm serial authorization, and execute full erasure with live entropy verification and tamper-proof certificate generation.
+                </div>
+              </div>
+            </div>
+          )}
           {/* USP 3b: Firmware warning callout — shows when firmware is amber/red */}
           {showFirmwareWarning && (
             <div style={{
@@ -684,6 +783,7 @@ export default function Erase({ device, navigate }: EraseProps) {
 
             {/* Certificate */}
             <button
+              onClick={() => navigate('reports')}
               style={{
                 width: '100%', padding: '12px', borderRadius: 8,
                 border: '1.5px solid #1E8F7A', backgroundColor: '#E8F5F2', color: '#1E8F7A',

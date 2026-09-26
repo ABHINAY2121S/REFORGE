@@ -20,6 +20,7 @@ export type Screen =
   | 'erase'
   | 'verification'
   | 'audit'
+  | 'reports'
   | 'cases'
   | 'settings';
 
@@ -62,6 +63,7 @@ export interface AppState {
   selectedDevice?: Device;
   operationType?: OperationType;
   operationScope?: OperationScope;
+  targetScopePaths?: string[];
   previousScreen?: Screen;
 }
 
@@ -69,6 +71,7 @@ export interface NavigateOptions {
   device?: Device;
   operationType?: OperationType;
   operationScope?: OperationScope;
+  targetScopePaths?: string[];
 }
 
 // ── Cross-module / sidecar types ──────────────────────────────────────────────

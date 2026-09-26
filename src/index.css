@@ -8,18 +8,19 @@
 /* @import url('/fonts/inter.css'); */
 
 :root {
-  /* Color tokens (Section 4) */
-  --bg-base: #10151b;
-  --surface: #171e27;
-  --surface-elevated: #1e2733;
-  --border: #2a3542;
-  --text-primary: #eaf0f6;
-  --text-secondary: #8fa0b3;
-  --accent-teal: #2fbfa4;
-  --danger-red: #e2626c;
-  --warning-amber: #e6b955;
-  --success-green: #5fca85;
-  --info-indigo: #93a3ea;
+  /* Color tokens (High contrast, modern forensic enterprise theme) */
+  --bg-base: #f1f5f9;
+  --surface: #ffffff;
+  --surface-elevated: #f8fafc;
+  --border: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --accent-teal: #0d9488;
+  --danger-red: #dc2626;
+  --warning-amber: #d97706;
+  --success-green: #16a34a;
+  --info-indigo: #4338ca;
 
   /* Typography — two named classes only: text-sans and text-mono */
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
@@ -98,12 +99,12 @@ body {
   white-space: nowrap;
 }
 
-.pill--success  { background: rgba(95, 202, 133, 0.15); color: var(--success-green); }
-.pill--warning  { background: rgba(230, 185, 85, 0.15);  color: var(--warning-amber); }
-.pill--danger   { background: rgba(226, 98, 108, 0.15);  color: var(--danger-red); }
-.pill--info     { background: rgba(147, 163, 234, 0.15); color: var(--info-indigo); }
-.pill--blocked  { background: rgba(226, 98, 108, 0.15);  color: var(--danger-red); }
-.pill--teal     { background: rgba(47, 191, 164, 0.15);  color: var(--accent-teal); }
+.pill--success  { background: #EDFAF3; color: var(--success-green); }
+.pill--warning  { background: #FEF8EC; color: var(--warning-amber); }
+.pill--danger   { background: #FEF2F3; color: var(--danger-red); }
+.pill--info     { background: #EEF0FB; color: var(--info-indigo); }
+.pill--blocked  { background: #FEF2F3; color: var(--danger-red); }
+.pill--teal     { background: #E8F5F2; color: var(--accent-teal); }
 
 /* ── Layout ───────────────────────────────────────────────────── */
 
@@ -129,10 +130,12 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: var(--space-6);
+  box-shadow: 0 1px 3px rgba(16, 21, 27, 0.05);
 }
 
 .card--elevated {
   background: var(--surface-elevated);
+  box-shadow: 0 4px 12px rgba(16, 21, 27, 0.08);
 }
 
 /* ── Buttons ──────────────────────────────────────────────────── */
@@ -144,7 +147,7 @@ body {
   gap: var(--space-2);
   padding: 10px var(--space-5);
   background: var(--accent-teal);
-  color: #0a1018;
+  color: #ffffff;
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
@@ -153,7 +156,7 @@ body {
   cursor: pointer;
   transition: background var(--transition-fast), transform var(--transition-fast);
 }
-.btn-primary:hover  { background: #25a88e; }
+.btn-primary:hover  { background: #166e5e; }
 .btn-primary:active { transform: translateY(1px); }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
@@ -226,3 +229,38 @@ input::placeholder {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+/* ── Print styles — only the document content, no sidebar/UI chrome ── */
+
+@media print {
+  /* Hide sidebar, forensic assistant, top action buttons */
+  .sidebar-no-print,
+  .forensic-assistant-root,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Let the main content fill full width */
+  .app-shell {
+    display: block !important;
+  }
+
+  .app-main {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  html, body, #root {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Ensure report document prints cleanly */
+  .report-print-area {
+    width: 100% !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+}

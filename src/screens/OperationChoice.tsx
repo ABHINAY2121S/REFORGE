@@ -161,6 +161,16 @@ export default function OperationChoice({ device, navigate, onChoose, onClose }:
               </div>
             </div>
 
+            {device.isSystemDrive && (
+              <div style={{
+                margin: '0 24px 14px', padding: '10px 14px', borderRadius: 8,
+                backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE',
+                fontSize: 12, color: '#1E40AF', fontWeight: 500, lineHeight: 1.5,
+              }}>
+                ⚡ <strong>Host OS Media:</strong> Sanitization pipeline unlocked. You can perform full NIST 800-88 erasure or shred specific files.
+              </div>
+            )}
+
             {/* Scope toggle */}
             <div style={{ padding: '14px 24px', borderTop: '1px solid #F9D0D4', backgroundColor: '#FFF8F8' }}>
               <div style={{ fontSize: 12, fontWeight: 500, color: '#647184', marginBottom: 8 }}>

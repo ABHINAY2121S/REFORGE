@@ -60,11 +60,11 @@ export default function Login({ onLogin, authError = '' }: LoginProps) {
           >
             <IconShieldCheck size={28} className="text-white" style={{ color: '#fff', stroke: '#fff' }} />
           </div>
-          <div style={{ fontWeight: 700, fontSize: 22, color: '#1A2330', letterSpacing: '-0.02em' }}>
-            PRAHARI
+          <div style={{ fontWeight: 800, fontSize: 24, color: '#0F172A', letterSpacing: '-0.02em' }}>
+            REFORGE
           </div>
-          <div style={{ fontSize: 13, color: '#647184', marginTop: 4 }}>
-            Digital Forensics Platform
+          <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginTop: 4 }}>
+            Digital Forensics & Data Recovery
           </div>
         </div>
 
@@ -198,8 +198,8 @@ export default function Login({ onLogin, authError = '' }: LoginProps) {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 12, color: '#647184' }}>
-          PRAHARI v2.4.1 — For authorized use only
+        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 12, fontWeight: 500, color: '#334155' }}>
+          REFORGE v1.0.0 — Licensed for Forensic Operations
         </div>
       </div>
     </div>

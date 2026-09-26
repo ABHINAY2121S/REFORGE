@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { AppState, Device, OperationType, OperationScope, Screen, Session, UserRole } from './types';
+import { AppState, Device, OperationType, OperationScope, Screen, Session, UserRole, NavigateOptions } from './types';
 import { apiNeedsFirstRun, apiLogin, apiSetupFirstAccount } from './api';
 import Sidebar from './components/Sidebar';
 import Login from './screens/Login';
@@ -25,8 +25,10 @@ import Erase from './screens/Erase';
 import FileScopeSelector from './screens/FileScopeSelector';
 import Verification from './screens/Verification';
 import Audit from './screens/Audit';
+import ReportsAndCertificates from './screens/ReportsAndCertificates';
 import Cases from './screens/Cases';
 import Settings from './screens/Settings';
+import ForensicAssistant from './components/ForensicAssistant';
 
 declare global {
   interface Window { __TAURI__?: unknown; }
@@ -117,8 +119,16 @@ export default function App() {
   };
 
   // ── Navigation ────────────────────────────────────────────────────────────
-  const navigate = (screen: Screen) => {
-    setState((s) => ({ ...s, currentScreen: screen }));
+  const navigate = (screen: Screen, options?: NavigateOptions) => {
+    setState((s) => ({
+      ...s,
+      currentScreen: screen,
+      previousScreen: s.currentScreen,
+      selectedDevice: options?.device ?? s.selectedDevice,
+      operationType: options?.operationType ?? s.operationType,
+      operationScope: options?.operationScope ?? s.operationScope,
+      targetScopePaths: options?.targetScopePaths ?? (screen === 'recovery' || screen === 'erase' ? s.targetScopePaths : undefined),
+    }));
   };
 
   const handleSelectDevice = (device: Device) => {
@@ -181,7 +191,11 @@ export default function App() {
           />
         )}
         {state.currentScreen === 'recovery' && (
-          <Recovery device={state.selectedDevice} navigate={navigate} />
+          <Recovery
+            device={state.selectedDevice}
+            navigate={navigate}
+            initialTargetPaths={state.targetScopePaths}
+          />
         )}
         {state.currentScreen === 'erase' && (
           <Erase device={state.selectedDevice} navigate={navigate} />
@@ -192,6 +206,14 @@ export default function App() {
         {state.currentScreen === 'audit' && (
           <Audit navigate={navigate} />
         )}
+        {state.currentScreen === 'reports' && (
+          <ReportsAndCertificates
+            navigate={navigate}
+            userRole={state.userRole}
+            userName={state.userName}
+            activeCaseName={state.activeCaseName}
+          />
+        )}
         {state.currentScreen === 'cases' && (
           <Cases navigate={navigate} userRole={state.userRole} />
         )}
@@ -199,6 +221,11 @@ export default function App() {
           <Settings navigate={navigate} userRole={state.userRole} />
         )}
       </main>
+
+      <ForensicAssistant
+        activeCaseName={state.activeCaseName}
+        userRole={state.userRole}
+      />
 
       {state.currentScreen === 'operation-choice' && state.selectedDevice && (
         <OperationChoice

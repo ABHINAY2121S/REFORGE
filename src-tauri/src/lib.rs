@@ -1,50 +1,41 @@
-// REFORGE Tauri Rust backend — sidecar bridge + command layer.
+﻿// REFORGE Tauri Rust backend -- sidecar bridge + command layer.
 //
 // Architecture: every Tauri command here is a thin passthrough to the
-// Python sidecar. No business logic lives in this file — all logic is
-// in the Python modules. This layer's only jobs are:
-//   1. Manage the Python sidecar process lifetime.
-//   2. Forward invoke() calls from the frontend as JSON-RPC requests.
-//   3. Return the JSON-RPC response back to the frontend.
-//   4. Stream Tauri events emitted by the Python sidecar (progress, etc.)
+// Python sidecar. No business logic lives in this file -- all logic is
+// in the Python modules. This layer only:
+//   1. Manages the Python sidecar process lifetime.
+//   2. Routes JSON-RPC requests from invoke_python() to sidecar stdin.
+//   3. Routes sidecar stdout lines back to waiting callers or Tauri events.
 //
-// SECURITY: no eval, no exec, no shell injection — the sidecar binary is
-// a pre-built frozen Python executable declared in tauri.conf.json, not
-// a dynamically constructed shell command.
+// Commands live in commands.rs (not lib.rs root) to avoid the Tauri macro
+// collision: #[tauri::command] pub fn in lib.rs generates duplicate symbols.
 
+use std::collections::HashMap;
 use std::sync::Mutex;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use tauri::{AppHandle, Emitter, Manager, State};
+use serde_json::Value;
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_shell::ShellExt;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tokio::sync::oneshot;
 
-// ── Sidecar state ─────────────────────────────────────────────────────────────
+pub mod commands;
+pub use commands::invoke_python;
+
+// -- Sidecar state -------------------------------------------------------------
 
 /// Global handle to the running Python sidecar child process.
-/// Wrapped in Mutex so Tauri's multi-threaded command dispatch can share it.
 pub struct SidecarState(pub Mutex<Option<CommandChild>>);
 
-/// One JSON-RPC 2.0 request sent to the sidecar over stdin.
-#[derive(Serialize)]
-struct RpcRequest<'a> {
-    id: u64,
-    method: &'a str,
-    params: Value,
-}
+/// In-flight RPC calls waiting for a response, keyed by request id.
+/// ponytail: unbounded map; ceiling is concurrent in-flight RPCs (typically 1).
+pub struct PendingRpc(pub Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>);
 
-/// One JSON-RPC 2.0 response received from the sidecar over stdout.
-#[derive(Deserialize)]
-struct RpcResponse {
-    id: Option<u64>,
-    result: Option<Value>,
-    error: Option<String>,
-}
+pub(crate) static RPC_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
-// ── Sidecar launch ────────────────────────────────────────────────────────────
+// -- Sidecar launch ------------------------------------------------------------
 
-/// Called once at app startup. Spawns the Python sidecar and waits for the
-/// {"ready": true} handshake before allowing any commands to be dispatched.
+/// Called once at app startup. Spawns the Python sidecar and routes its stdout
+/// lines either to waiting RPC callers (by id) or to the Tauri event bus.
 pub fn launch_sidecar(app: &AppHandle) {
     let sidecar_cmd = app
         .shell()
@@ -55,7 +46,7 @@ pub fn launch_sidecar(app: &AppHandle) {
         .spawn()
         .expect("Failed to spawn Python sidecar");
 
-    // Store the child handle so commands can write to its stdin.
+    // Store the child handle so invoke_python() can write to its stdin.
     app.state::<SidecarState>()
         .0
         .lock()
@@ -68,18 +59,28 @@ pub fn launch_sidecar(app: &AppHandle) {
             match event {
                 CommandEvent::Stdout(line) => {
                     let text = String::from_utf8_lossy(&line);
-                    // Forward any event-shaped line to the frontend as a Tauri event.
-                    // The Python sidecar emits {"event": "...", "payload": {...}}
-                    // for streaming progress; everything else is an RPC response
-                    // handled by the command that sent the request.
                     if let Ok(v) = serde_json::from_str::<Value>(&text) {
+                        // Event-shaped message -> forward to frontend.
                         if v.get("event").is_some() {
                             let event_name = v["event"].as_str().unwrap_or("reforge_event");
                             let _ = app_handle.emit(event_name, v["payload"].clone());
+                        // RPC response -> route to waiting invoke_python() call.
+                        } else if let Some(id) = v.get("id").and_then(|i| i.as_u64()) {
+                            let sender = app_handle
+                                .state::<PendingRpc>()
+                                .0
+                                .lock()
+                                .unwrap()
+                                .remove(&id);
+                            if let Some(tx) = sender {
+                                let result = if let Some(err) = v["error"].as_str() {
+                                    Err(err.to_owned())
+                                } else {
+                                    Ok(v["result"].clone())
+                                };
+                                let _ = tx.send(result);
+                            }
                         }
-                        // RPC responses are matched by id inside invoke_python().
-                        // (Full bidirectional RPC is handled there via a shared response
-                        // channel; this loop only needs to forward event-shaped messages.)
                     }
                 }
                 CommandEvent::Stderr(line) => {
@@ -96,49 +97,4 @@ pub fn launch_sidecar(app: &AppHandle) {
             }
         }
     });
-}
-
-// ── Generic JSON-RPC dispatcher ───────────────────────────────────────────────
-// ponytail: the current approach re-spawns a fresh one-shot sidecar call per
-// command using tauri-plugin-shell's output() for simplicity. Ceiling: ~50ms
-// cold-start overhead per call. Upgrade path: move to a persistent stdin/stdout
-// channel with an in-process response queue (matching on RPC id) for the
-// operations that care about latency (live progress streaming already uses
-// events not RPC, so only DB-read commands are affected).
-
-static RPC_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
-
-#[tauri::command]
-pub async fn invoke_python(
-    method: String,
-    params: Value,
-    app: AppHandle,
-) -> Result<Value, String> {
-    let id = RPC_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    let request = json!({
-        "id": id,
-        "method": method,
-        "params": params,
-    });
-    let request_str = serde_json::to_string(&request).map_err(|e| e.to_string())?;
-
-    // One-shot sidecar call: spawn -> write -> read response.
-    let output = app
-        .shell()
-        .sidecar("reforge-python")
-        .map_err(|e| e.to_string())?
-        .args(["--rpc-once"])  // Python main.py handles --rpc-once: read one line, respond, exit
-        .stdin_raw(request_str.as_bytes().to_vec())  // Not available in tauri-plugin-shell v2 directly
-        .output()
-        .await
-        .map_err(|e| e.to_string())?;
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let response: RpcResponse = serde_json::from_str(stdout.trim())
-        .map_err(|e| format!("Failed to parse sidecar response: {e}\nRaw: {stdout}"))?;
-
-    if let Some(err) = response.error {
-        return Err(err);
-    }
-    Ok(response.result.unwrap_or(Value::Null))
 }

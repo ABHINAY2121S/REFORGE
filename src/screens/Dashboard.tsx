@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Screen, UserRole } from '../types';
+import { apiListDevices, apiGetDashboardStats, apiGetRecentOperations } from '../api';
 import {
   IconPlus, IconSearch, IconShieldLock, IconShieldCheck,
   IconActivity, IconHardDrive, IconCheck, IconX, IconAlertTriangle, IconDocument
@@ -105,22 +106,43 @@ function NewOpModal({ onClose, navigate }: NewOpModalProps) {
 
 export default function Dashboard({ navigate, userName, activeCaseName, userRole }: DashboardProps) {
   const [showModal, setShowModal] = useState(false);
+  const [deviceCount, setDeviceCount] = useState<number>(1);
+  const [activeOpsCount, setActiveOpsCount] = useState<number>(0);
+  const [casesCount, setCasesCount] = useState<number>(1);
+  const [pendingVerifCount, setPendingVerifCount] = useState<number>(0);
 
-  const firstName = userName.split(' ')[0];
+  useEffect(() => {
+    apiListDevices().then((devs) => {
+      if (devs && devs.length > 0) {
+        setDeviceCount(devs.length);
+      }
+    }).catch(() => {});
+
+    apiGetDashboardStats().then((st) => {
+      if (st) {
+        if (st.devicesConnected) setDeviceCount(st.devicesConnected);
+        if (typeof st.activeOperations === 'number') setActiveOpsCount(st.activeOperations);
+        if (typeof st.casesOpen === 'number') setCasesCount(st.casesOpen);
+        if (typeof st.pendingVerifications === 'number') setPendingVerifCount(st.pendingVerifications);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const firstName = userName.split(' ')[0] || 'Examiner';
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   const stats = [
-    { label: 'Devices Connected', value: '3', icon: IconHardDrive, color: '#1E8F7A' },
-    { label: 'Active Operations', value: '1', icon: IconActivity, color: '#4C5FC7' },
-    { label: 'Cases Open', value: '4', icon: IconSearch, color: '#B8862E' },
-    { label: 'Pending Verifications', value: '2', icon: IconShieldCheck, color: '#C6394A' },
+    { label: 'Devices Connected', value: String(deviceCount), icon: IconHardDrive, color: '#1E8F7A' },
+    { label: 'Active Operations', value: String(activeOpsCount), icon: IconActivity, color: '#4C5FC7' },
+    { label: 'Cases Open', value: String(casesCount), icon: IconSearch, color: '#B8862E' },
+    { label: 'Pending Verifications', value: String(pendingVerifCount), icon: IconShieldCheck, color: '#C6394A' },
   ];
 
   const auditorStats = [
-    { label: 'Certificates Issued (Week)', value: '18', icon: IconDocument, color: '#1E8F7A' },
-    { label: 'Pending Reviews', value: '2', icon: IconAlertTriangle, color: '#B8862E' },
-    { label: 'Cases Open', value: '4', icon: IconSearch, color: '#4C5FC7' },
+    { label: 'Certificates Issued (Week)', value: '0', icon: IconDocument, color: '#1E8F7A' },
+    { label: 'Pending Reviews', value: String(pendingVerifCount), icon: IconAlertTriangle, color: '#B8862E' },
+    { label: 'Cases Open', value: String(casesCount), icon: IconSearch, color: '#4C5FC7' },
   ];
 
   if (userRole === 'Auditor') {

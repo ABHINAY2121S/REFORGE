@@ -6,9 +6,9 @@ import type { ReportType } from "../types/audit";
  * operation" rather than always offering all four.
  */
 export function relevantReportsForAction(actionType: string): ReportType[] {
-  if (actionType.startsWith("recovery")) return ["forensic"];
+  if (actionType.startsWith("recovery")) return ["forensic", "section_65b"];
   if (actionType.startsWith("erase")) return ["erasure", "sanitization_cert"];
-  return ["forensic", "erasure", "sanitization_cert", "section_65b"];
+  return [];
 }
 
 export function relevantReportsForCustodyEvent(eventType: string): ReportType[] {

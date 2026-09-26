@@ -1,22 +1,19 @@
 /*
-  REFORGE dark theme tokens. If a shared theme file already exists
-  elsewhere in the app, delete this file and import that one instead —
-  the class names below only depend on these custom property NAMES, not
-  on this file being the source of truth.
+  REFORGE light theme tokens for Audit & Reports screen.
 */
 :root {
-  --bg: #10151b;
-  --surface: #171e27;
-  --surface-raised: #1d2530;
-  --border: #2a3542;
-  --text: #eaf0f6;
-  --text-muted: #8fa0b3;
-  --accent: #2fbfa4;
-  --accent-dim: #1f6f5c;
-  --danger: #e2626c;
-  --warning: #e6b955;
-  --success: #5fca85;
-  --info: #93a3ea;
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface-raised: #f8fafc;
+  --border: #dde3ea;
+  --text: #1a2330;
+  --text-muted: #647184;
+  --accent: #1e8f7a;
+  --accent-dim: #166e5e;
+  --danger: #c6394a;
+  --warning: #b8862e;
+  --success: #2e9e5b;
+  --info: #4c5fc7;
 
   --font-ui: -apple-system, "Segoe UI", Inter, Roboto, sans-serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;

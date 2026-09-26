@@ -7,17 +7,15 @@ export interface DetailPanelContext {
   caseId: string;
   operationId: string;
   fields: Array<{ label: string; value: string }>;
-  /** Which report types are relevant to this specific row/card — e.g. an
-   * erase_execute entry offers "erasure" + "sanitization_cert"; a
-   * recovery_scan entry offers "forensic". */
   relevantReports: ReportType[];
+  navigate?: (screen: any, options?: any) => void;
 }
 
 const REPORT_LABELS: Record<ReportType, string> = {
   forensic: "Forensic Report",
   erasure: "Erasure Report",
   sanitization_cert: "Certificate of Sanitization",
-  section_65b: "Section 65B(4) Certificate",
+  section_65b: "§65B(4) Evidence Certificate",
 };
 
 export function DetailPanel({
@@ -29,12 +27,37 @@ export function DetailPanel({
 }) {
   const [pending, setPending] = useState<ReportType | null>(null);
 
+  function handleView(reportType: ReportType) {
+    const docTypeMap: Record<ReportType, string> = {
+      forensic: "forensic",
+      erasure: "erasure",
+      section_65b: "section65b",
+      sanitization_cert: "sanitization",
+    };
+    if (context.navigate) {
+      context.navigate("reports", {
+        operationId: context.operationId,
+        initialDoc: docTypeMap[reportType],
+      });
+      onClose();
+    } else {
+      window.dispatchEvent(
+        new CustomEvent("reforge:view_document", {
+          detail: {
+            operationId: context.operationId,
+            docType: docTypeMap[reportType],
+            caseId: context.caseId,
+          },
+        })
+      );
+      onClose();
+    }
+  }
+
   async function handleDownload(reportType: ReportType) {
     setPending(reportType);
     try {
       const result = await generateReport(reportType, context.caseId, context.operationId);
-      // In the real (Tauri) build, this triggers the OS save dialog /
-      // opens the file; in mock mode we just surface the path.
       window.open(result.pdf_path, "_blank");
     } finally {
       setPending(null);
@@ -56,21 +79,35 @@ export function DetailPanel({
           </div>
         ))}
 
-        <div className="field" style={{ marginTop: 24 }}>
-          <div className="field-label">Relevant Reports</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
-            {context.relevantReports.map((rt) => (
-              <button
-                key={rt}
-                className="btn primary"
-                disabled={pending === rt}
-                onClick={() => handleDownload(rt)}
-              >
-                {pending === rt ? "Generating…" : `Download ${REPORT_LABELS[rt]}`}
-              </button>
-            ))}
+        {context.relevantReports.length > 0 && (
+          <div className="field" style={{ marginTop: 24 }}>
+            <div className="field-label" style={{ fontWeight: 700, marginBottom: 8 }}>
+              Generated Documents
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
+              {context.relevantReports.map((rt) => (
+                <div key={rt} style={{ display: "flex", gap: 8 }}>
+                  <button
+                    className="btn primary"
+                    style={{ flex: 1, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}
+                    onClick={() => handleView(rt)}
+                  >
+                    View {REPORT_LABELS[rt]}
+                  </button>
+                  <button
+                    className="btn secondary"
+                    style={{ padding: "8px 12px", fontSize: 12 }}
+                    disabled={pending === rt}
+                    onClick={() => handleDownload(rt)}
+                    title="Export / Download PDF"
+                  >
+                    {pending === rt ? "…" : "Download"}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

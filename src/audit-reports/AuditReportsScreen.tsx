@@ -19,18 +19,15 @@ const TABS: Array<{ id: TabId; label: string }> = [
 ];
 
 export interface AuditReportsScreenProps {
-  /** The case currently open in REFORGE. Defaults to a demo case ID when
-   * not provided, so this screen renders standalone during development. */
   caseId?: string;
-  /** The most recent operation ID for this case, used by the Report
-   * Generation tab and by row-level "download report" actions when a
-   * more specific operation ID isn't available from the row itself. */
   operationId?: string;
+  navigate?: (screen: any, options?: any) => void;
 }
 
 export function AuditReportsScreen({
   caseId = MOCK_CASE_ID,
   operationId = "op-latest",
+  navigate,
 }: AuditReportsScreenProps) {
   const [activeTab, setActiveTab] = useState<TabId>("audit_log");
 
@@ -51,7 +48,7 @@ export function AuditReportsScreen({
       </div>
 
       <div className="tab-panel">
-        {activeTab === "audit_log" && <AuditLogTab caseId={caseId} />}
+        {activeTab === "audit_log" && <AuditLogTab caseId={caseId} navigate={navigate} />}
         {activeTab === "chain_of_custody" && <ChainOfCustodyTab caseId={caseId} />}
         {activeTab === "activity_timeline" && <ActivityTimelineTab caseId={caseId} />}
         {activeTab === "integrity_check" && <IntegrityCheckTab caseId={caseId} />}

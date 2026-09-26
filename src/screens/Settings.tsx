@@ -144,9 +144,9 @@ export default function Settings({ navigate, userRole }: SettingsProps) {
                 border: '1px solid #DDE3EA',
               }}
             >
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#1A2330', marginBottom: 4 }}>PRAHARI</div>
-              <div style={{ fontSize: 13, color: '#647184', marginBottom: 24 }}>
-                Integrated Digital Forensics Platform
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#0F172A', marginBottom: 4 }}>REFORGE</div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 24 }}>
+                Next-Gen Forensic Recovery & Sanitization Platform
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '10px 0', fontSize: 13 }}>
                 {[

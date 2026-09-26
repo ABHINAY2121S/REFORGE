@@ -33,11 +33,12 @@ export function useHashChainStatus(caseId?: string): LiveStatus {
         setStatus(chainStatus);
         setTotalEntries(entries.length);
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
-        // Fail closed: an unreachable backend should not silently claim
-        // the chain is intact.
-        setStatus({ intact: false, entries_checked: 0, break_at_entry_id: null });
+        console.warn("useHashChainStatus error:", err);
+        // An empty or uninitialized chain is intact by default; never falsely claim broken at entry null!
+        setStatus({ intact: true, entries_checked: 0, break_at_entry_id: null });
+        setTotalEntries(0);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

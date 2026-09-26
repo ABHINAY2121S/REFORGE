@@ -7,7 +7,7 @@ import type { AuditLogEntry, AuditLogFilters } from "../types/audit";
 
 type SortKey = "timestamp" | "user_id" | "case_id" | "action_type" | "status";
 
-export function AuditLogTab({ caseId }: { caseId?: string }) {
+export function AuditLogTab({ caseId, navigate }: { caseId?: string; navigate?: (screen: any, options?: any) => void }) {
   const { entries, loading } = useAuditLog(caseId);
   const [filters, setFilters] = useState<AuditLogFilters>(DEFAULT_FILTERS);
   const [sortKey, setSortKey] = useState<SortKey>("timestamp");
@@ -39,20 +39,30 @@ export function AuditLogTab({ caseId }: { caseId?: string }) {
   }
 
   const detailContext: DetailPanelContext | null = selected
-    ? {
-        title: selected.action_type,
-        caseId: selected.case_id,
-        operationId: selected.id,
-        fields: [
-          { label: "Timestamp", value: selected.timestamp },
-          { label: "User", value: selected.user_id },
-          { label: "Evidence", value: selected.evidence_id ?? "—" },
-          { label: "Description", value: selected.description },
-          { label: "Result", value: selected.result },
-          { label: "Chain hash", value: selected.chain_hash },
-        ],
-        relevantReports: relevantReportsForAction(selected.action_type),
-      }
+    ? (() => {
+        const opIdMatch = selected.description.match(/Operation ID:\s*([A-Za-z0-9_-]+)/i);
+        const resolvedOpId = opIdMatch ? opIdMatch[1] : selected.id;
+        const isRecovery = selected.action_type.toLowerCase().includes("recovery");
+        const isErase = selected.action_type.toLowerCase().includes("erase");
+        const title = isRecovery ? "Recovery Completed" : isErase ? "Secure Erasure Completed" : selected.action_type;
+
+        return {
+          title,
+          caseId: selected.case_id,
+          operationId: resolvedOpId,
+          fields: [
+            { label: "Operation ID", value: resolvedOpId },
+            { label: "Evidence / Device", value: selected.evidence_id ?? "—" },
+            { label: "Completed", value: selected.timestamp },
+            { label: "User / Examiner", value: selected.user_id },
+            { label: "Description", value: selected.description },
+            { label: "Result", value: selected.result },
+            { label: "Chain hash", value: selected.chain_hash },
+          ],
+          relevantReports: relevantReportsForAction(selected.action_type),
+          navigate,
+        };
+      })()
     : null;
 
   return (

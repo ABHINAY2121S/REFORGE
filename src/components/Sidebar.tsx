@@ -3,6 +3,7 @@ import {
   IconHome, IconHardDrive, IconSearch, IconShieldLock, IconShieldCheck,
   IconDocument, IconFolder, IconGear, IconUser
 } from './Icons';
+import reforgeLogoUrl from '../assets/reforge-logo.png';
 
 interface SidebarProps {
   currentScreen: Screen;
@@ -34,18 +35,21 @@ export default function Sidebar({ currentScreen, navigate, userRole, userName }:
         { screen: 'recovery', label: 'Recovery', Icon: IconSearch },
         { screen: 'erase', label: 'Erase', Icon: IconShieldLock },
         { screen: 'verification', label: 'Verification', Icon: IconShieldCheck },
-        { screen: 'audit', label: 'Audit & Reports', Icon: IconDocument },
+        { screen: 'reports', label: 'Reports & Certificates', Icon: IconDocument },
+        { screen: 'audit', label: 'Audit Trail', Icon: IconShieldCheck },
         { screen: 'cases', label: 'Case Management', Icon: IconFolder },
       ]
     : [
         { screen: 'dashboard', label: 'Dashboard', Icon: IconHome },
         { screen: 'verification', label: 'Verification', Icon: IconShieldCheck },
-        { screen: 'audit', label: 'Audit & Reports', Icon: IconDocument },
+        { screen: 'reports', label: 'Reports & Certificates', Icon: IconDocument },
+        { screen: 'audit', label: 'Audit Trail', Icon: IconShieldCheck },
         { screen: 'cases', label: 'Case Management', Icon: IconFolder },
       ];
 
   return (
     <aside
+      className="sidebar-no-print"
       style={{
         width: 240,
         minWidth: 240,
@@ -60,31 +64,12 @@ export default function Sidebar({ currentScreen, navigate, userRole, userName }:
       }}
     >
       {/* Logo */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #DDE3EA' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              backgroundColor: '#1E8F7A',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <IconShieldCheck size={18} className="text-white" style={{ color: '#fff', stroke: '#fff' }} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: 15, color: '#1A2330', letterSpacing: '-0.01em' }}>
-              PRAHARI
-            </div>
-            <div style={{ fontSize: 11, color: '#647184', marginTop: 1 }}>
-              Forensics Platform
-            </div>
-          </div>
-        </div>
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid #DDE3EA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img
+          src={reforgeLogoUrl}
+          alt="REFORGE — Forensic Recovery & Sanitization"
+          style={{ width: 160, height: 'auto', display: 'block' }}
+        />
       </div>
 
       {/* Navigation */}

@@ -187,6 +187,10 @@ export default function Cases({ navigate, userRole }: CasesProps) {
   const [selectedCase, setSelectedCase] = useState(cases[0]);
   const [caseTab, setCaseTab] = useState<CaseTab>('operations');
   const [activeEdgeIdx, setActiveEdgeIdx] = useState<number | null>(null);
+  const [showNewCase, setShowNewCase] = useState(false);
+  const [newCaseName, setNewCaseName] = useState('');
+  const [newCaseDesc, setNewCaseDesc] = useState('');
+  const [newCaseAssignee, setNewCaseAssignee] = useState('');
 
   const handleEdgeClick = (i: number) => {
     setActiveEdgeIdx(prev => prev === i ? null : i);
@@ -208,6 +212,7 @@ export default function Cases({ navigate, userRole }: CasesProps) {
         </div>
         {userRole !== 'Auditor' && (
           <button
+            onClick={() => setShowNewCase(true)}
             style={{
               display: 'flex', alignItems: 'center', gap: 7, padding: '9px 16px',
               borderRadius: 8, border: 'none', backgroundColor: '#1E8F7A', color: '#FFFFFF',
@@ -220,6 +225,67 @@ export default function Cases({ navigate, userRole }: CasesProps) {
           </button>
         )}
       </div>
+
+      {/* New Case Modal */}
+      {showNewCase && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(16,21,27,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: 12, padding: 28, width: 480, boxShadow: '0 8px 32px rgba(16,21,27,0.18)', border: '1px solid #DDE3EA' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#1A2330', marginBottom: 4 }}>Open New Case</div>
+            <div style={{ fontSize: 13, color: '#647184', marginBottom: 22 }}>Create a new forensic investigation case file.</div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#647184', display: 'block', marginBottom: 5 }}>CASE NAME *</label>
+                <input
+                  autoFocus
+                  value={newCaseName}
+                  onChange={e => setNewCaseName(e.target.value)}
+                  placeholder="e.g. State v. Meridian Corp"
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 7, border: '1.5px solid #DDE3EA', fontSize: 13, fontFamily: 'Inter, system-ui, sans-serif', outline: 'none', boxSizing: 'border-box', color: '#1A2330' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#647184', display: 'block', marginBottom: 5 }}>DESCRIPTION</label>
+                <textarea
+                  value={newCaseDesc}
+                  onChange={e => setNewCaseDesc(e.target.value)}
+                  placeholder="Brief description of the investigation..."
+                  rows={3}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 7, border: '1.5px solid #DDE3EA', fontSize: 13, fontFamily: 'Inter, system-ui, sans-serif', outline: 'none', boxSizing: 'border-box', resize: 'none', color: '#1A2330' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#647184', display: 'block', marginBottom: 5 }}>ASSIGNED INVESTIGATOR</label>
+                <input
+                  value={newCaseAssignee}
+                  onChange={e => setNewCaseAssignee(e.target.value)}
+                  placeholder="e.g. S. Mehta"
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 7, border: '1.5px solid #DDE3EA', fontSize: 13, fontFamily: 'Inter, system-ui, sans-serif', outline: 'none', boxSizing: 'border-box', color: '#1A2330' }}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 24 }}>
+              <button
+                onClick={() => { setShowNewCase(false); setNewCaseName(''); setNewCaseDesc(''); setNewCaseAssignee(''); }}
+                style={{ padding: '9px 18px', borderRadius: 7, border: '1px solid #DDE3EA', backgroundColor: '#FFFFFF', color: '#647184', fontSize: 13, fontWeight: 500, cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif' }}
+              >
+                Cancel
+              </button>
+              <button
+                disabled={!newCaseName.trim()}
+                onClick={() => {
+                  alert(`Case "${newCaseName}" created successfully! (Demo — data not persisted in prototype)`);
+                  setShowNewCase(false); setNewCaseName(''); setNewCaseDesc(''); setNewCaseAssignee('');
+                }}
+                style={{ padding: '9px 18px', borderRadius: 7, border: 'none', backgroundColor: newCaseName.trim() ? '#1E8F7A' : '#B0BAC9', color: '#FFFFFF', fontSize: 13, fontWeight: 600, cursor: newCaseName.trim() ? 'pointer' : 'not-allowed', fontFamily: 'Inter, system-ui, sans-serif' }}
+              >
+                Create Case
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
         {/* Cases list */}

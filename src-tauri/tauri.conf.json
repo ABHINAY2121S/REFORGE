@@ -4,14 +4,16 @@
   "version": "0.1.0",
   "identifier": "com.reforge.forensics",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "npm run build",
+    "devUrl": null,
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
+        "label": "main",
         "title": "REFORGE — Digital Forensics Platform",
         "width": 1440,
         "height": 900,
@@ -47,9 +49,7 @@
   },
   "plugins": {
     "shell": {
-      "all": false,
-      "open": false,
-      "sidecar": true
+      "open": false
     }
   }
 }

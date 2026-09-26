@@ -19,9 +19,10 @@ interface AuditProps {
   operationId?: string;
 }
 
-export default function Audit({ caseId, operationId }: AuditProps) {
+export default function Audit({ navigate, caseId, operationId }: AuditProps) {
   return (
     <AuditReportsScreen
+      navigate={navigate}
       caseId={caseId}
       operationId={operationId}
     />

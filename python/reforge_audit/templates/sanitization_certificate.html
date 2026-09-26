@@ -36,7 +36,7 @@
 <div class="cert-frame">
     <div class="cert-title">Certificate of Sanitization</div>
     <div class="cert-subtitle">
-        Issued per NIST SP 800-88 Rev.2 media sanitization guidance
+        Issued per NIST SP 800-88 Rev. 2 and IEEE 2883-2022 media sanitization standards
     </div>
 
     <div class="field-grid">
@@ -49,7 +49,7 @@
         <div><div class="field-label">Sanitization Method</div>
             <div class="field-value">{{ device_info.method | default("Not available in this build") }} ({{ device_info.method_category | default("Clear/Purge/Destroy — not available") }})</div></div>
         <div><div class="field-label">Standard Reference</div>
-            <div class="field-value">NIST SP 800-88 Rev.2 / IEEE 2883</div></div>
+            <div class="field-value">NIST SP 800-88 Rev. 2 · IEEE 2883-2022 · ISO/IEC 27037 · RFC 3161</div></div>
         <div><div class="field-label">Verification Result</div>
             <div class="field-value">
                 {% if integrity.intact %}

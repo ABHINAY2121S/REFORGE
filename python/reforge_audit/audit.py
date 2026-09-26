@@ -102,7 +102,7 @@ def log_audit_event(
         prev_row = tx.execute(
             "SELECT chain_hash FROM audit_log ORDER BY rowid DESC LIMIT 1"
         ).fetchone()
-        previous_hash = prev_row["chain_hash"] if prev_row else None
+        previous_hash = prev_row["chain_hash"] if prev_row else "GENESIS"
 
         row = {
             "id": entry_id,
@@ -217,18 +217,41 @@ def verify_hash_chain(case_id: Optional[str] = None) -> dict:
         """
     ).fetchall()
 
-    previous_hash = None
+    if not rows:
+        return {
+            "intact": True,
+            "entries_checked": 0,
+            "break_at_entry_id": None,
+        }
+
+    previous_hash = "GENESIS"
     entries_checked = 0
     break_at_entry_id = None
 
-    for row in rows:
+    for i, row in enumerate(rows):
         row_dict = dict(row)
-        expected = compute_sha256(
-            ((previous_hash or "") + canonical_json(_row_for_hashing(row_dict))).encode("utf-8")
-        )
-        if expected != row_dict["chain_hash"] or row_dict["previous_hash"] != previous_hash:
+        prev_h = row_dict.get("previous_hash")
+
+        if i == 0:
+            if prev_h not in ("GENESIS", None, ""):
+                break_at_entry_id = row_dict["id"]
+                break
+            prev_input = prev_h or ""
+            expected = compute_sha256(
+                (prev_input + canonical_json(_row_for_hashing(row_dict))).encode("utf-8")
+            )
+        else:
+            if prev_h != previous_hash:
+                break_at_entry_id = row_dict["id"]
+                break
+            expected = compute_sha256(
+                ((previous_hash or "") + canonical_json(_row_for_hashing(row_dict))).encode("utf-8")
+            )
+
+        if expected != row_dict["chain_hash"]:
             break_at_entry_id = row_dict["id"]
             break
+
         if case_id is None or row_dict["case_id"] == case_id:
             entries_checked += 1
         previous_hash = row_dict["chain_hash"]

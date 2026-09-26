@@ -1,0 +1,11 @@
+{
+  "identifier": "default",
+  "description": "Default capabilities for REFORGE",
+  "platforms": ["windows"],
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:allow-execute",
+    "shell:allow-spawn"
+  ]
+}
