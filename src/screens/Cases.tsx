@@ -1,8 +1,14 @@
 import { useState } from 'react';
 import { Screen, UserRole } from '../types';
 import {
-  IconHardDrive, IconSearch, IconShieldLock, IconPlus, IconCheck, IconActivity, IconAlertTriangle, IconInfo, IconDocument
+  IconHardDrive, IconSearch, IconShieldLock, IconPlus, IconCheck, IconActivity, IconAlertTriangle, IconInfo, IconDocument, IconShieldCheck
 } from '../components/Icons';
+import {
+  getCompletedRecovery,
+  getCompletedErase,
+  getVerifiedErase,
+  getCustodyRecords
+} from '../operationsStore';
 
 interface CasesProps {
   navigate: (screen: Screen) => void;
@@ -15,20 +21,20 @@ const cases = [
   {
     id: '2024-CF-0892',
     name: 'State v. Meridian Corp',
-    description: 'Corporate data exfiltration investigation. Multiple storage devices seized.',
+    description: 'Corporate data exfiltration investigation & media sanitization audit.',
     status: 'active',
-    devices: ['Seagate Barracuda 2TB', 'Samsung 970 EVO NVMe'],
-    operations: 4,
+    mode: 'both',
+    devices: ['WD PC SN810 NVMe 512GB', 'Seagate Barracuda 2TB'],
+    operations: 2,
     opened: '2024-11-08',
-    assignee: 'S. Mehta',
+    assignee: 'Inspector Abhinay',
     ops: [
-      { type: 'recovery', device: 'Seagate Barracuda 2TB', status: 'verified', time: '09:14, Today' },
-      { type: 'erase', device: 'Samsung 870 EVO SSD', status: 'in-progress', time: '08:47, Today' },
+      { type: 'recovery', device: 'WD PC SN810 NVMe 512GB', status: 'verified', time: '11:30, 24 Sep' },
+      { type: 'erase', device: 'WD PC SN810 NVMe 512GB', status: 'verified', time: '14:20, 25 Sep' },
     ],
-    // USP 4 correlation data
     correlationEdges: [
       {
-        devA: 'Seagate Barracuda 2TB', devB: 'Samsung 970 EVO NVMe', matchCount: 3,
+        devA: 'WD PC SN810 NVMe 512GB', devB: 'Seagate Barracuda 2TB', matchCount: 3,
         matches: [
           { type: 'hash', label: 'Contract_MeridianCorp_v3.pdf', detail: 'SHA-256 match — identical file on both drives', confidence: 97 },
           { type: 'timestamp', label: 'NTFS journal entry — 2024-09-04 14:22', detail: 'Same file modification event logged on both devices within 4s', confidence: 84 },
@@ -38,50 +44,45 @@ const cases = [
     ],
   },
   {
-    id: '2024-CF-0887',
-    name: 'Internal HR Investigation — R. Sharma',
-    description: 'HR-initiated review. USB devices and personal laptop.',
-    status: 'active',
-    devices: ['SanDisk Ultra USB 3.2', 'WD Black NVMe 1TB'],
-    operations: 3,
-    opened: '2024-09-09',
-    assignee: 'R. Kumar',
-    ops: [
-      { type: 'recovery', device: 'SanDisk Ultra USB 3.2', status: 'needs-review', time: '11 Sep, 14:22' },
-      { type: 'erase', device: 'WD Black NVMe 1TB', status: 'verified', time: '11 Sep, 11:05' },
-    ],
-    correlationEdges: [
-      {
-        devA: 'SanDisk Ultra USB 3.2', devB: 'WD Black NVMe 1TB', matchCount: 1,
-        matches: [
-          { type: 'hash', label: 'backup_keys_encrypted.zip', detail: 'SHA-256 match — file present on USB and NVMe unallocated space', confidence: 88 },
-        ],
-      },
-    ],
-  },
-  {
     id: '2024-CF-0884',
     name: 'Procurement Fraud Investigation',
-    description: 'Finance department suspected data destruction.',
-    status: 'closed',
-    devices: ['Kingston microSD 128GB'],
+    description: 'Targeted recovery of deleted bid comparisons, kickback ledgers and encrypted archives.',
+    status: 'active',
+    mode: 'recovery',
+    devices: ['Kingston Canvas React Plus microSDXC 128GB'],
     operations: 1,
     opened: '2024-09-08',
-    assignee: 'A. Patel',
+    assignee: 'Examiner A. Patel',
     ops: [
-      { type: 'recovery', device: 'Kingston microSD 128GB', status: 'failed', time: '10 Sep, 16:30' },
+      { type: 'recovery', device: 'Kingston Canvas React Plus microSDXC 128GB', status: 'verified', time: '16:30, 10 Sep' },
+    ],
+    correlationEdges: [],
+  },
+  {
+    id: '2024-CF-0887',
+    name: 'Internal HR Investigation — R. Sharma',
+    description: 'Decommissioned workstation SSD sanitization & verification prior to redeployment.',
+    status: 'active',
+    mode: 'erase',
+    devices: ['WD Black NVMe 1TB'],
+    operations: 1,
+    opened: '2024-09-09',
+    assignee: 'Examiner R. Kumar',
+    ops: [
+      { type: 'erase', device: 'WD Black NVMe 1TB', status: 'verified', time: '11:05, 11 Sep' },
     ],
     correlationEdges: [],
   },
   {
     id: '2024-CF-0880',
     name: 'Ex-employee IP Theft',
-    description: 'Cloud sync and portable storage investigation.',
+    description: 'Quarantined storage intake pending legal authorization and forensic imaging.',
     status: 'pending',
-    devices: [],
+    mode: 'pending',
+    devices: ['Quarantined USB 64GB'],
     operations: 0,
     opened: '2024-09-05',
-    assignee: 'S. Mehta',
+    assignee: 'Investigator S. Mehta',
     ops: [],
     correlationEdges: [],
   },
@@ -199,6 +200,11 @@ export default function Cases({ navigate, userRole }: CasesProps) {
   const activeEdge = activeEdgeIdx != null ? selectedCase.correlationEdges[activeEdgeIdx] : null;
   const hasMultipleDevices = selectedCase.devices.length >= 2;
 
+  const recOp = getCompletedRecovery(selectedCase.id);
+  const eraseOp = getCompletedErase(selectedCase.id);
+  const verifiedEraseOp = getVerifiedErase(selectedCase.id);
+  const custodyRecords = getCustodyRecords(selectedCase.id);
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
@@ -311,15 +317,32 @@ export default function Cases({ navigate, userRole }: CasesProps) {
                     <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 11, color: '#647184' }}>
                       #{c.id}
                     </span>
-                    <div
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500,
-                        padding: '2px 7px', borderRadius: 10,
-                        backgroundColor: cfg.bg, color: cfg.color,
-                      }}
-                    >
-                      <CfgIcon size={10} style={{ stroke: cfg.color }} />
-                      {cfg.label}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                      {c.mode === 'both' && (
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, backgroundColor: '#EDFAF3', color: '#16A34A' }}>
+                          Both
+                        </span>
+                      )}
+                      {c.mode === 'recovery' && (
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, backgroundColor: '#E8F5F2', color: '#1E8F7A' }}>
+                          Recovery
+                        </span>
+                      )}
+                      {c.mode === 'erase' && (
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, backgroundColor: '#EFF6FF', color: '#2563EB' }}>
+                          Erase
+                        </span>
+                      )}
+                      <div
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 500,
+                          padding: '2px 7px', borderRadius: 10,
+                          backgroundColor: cfg.bg, color: cfg.color,
+                        }}
+                      >
+                        <CfgIcon size={10} style={{ stroke: cfg.color }} />
+                        {cfg.label}
+                      </div>
                     </div>
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#1A2330', marginBottom: 4 }}>{c.name}</div>
@@ -399,6 +422,161 @@ export default function Cases({ navigate, userRole }: CasesProps) {
                 ) : (
                   <div style={{ fontSize: 13, color: '#647184' }}>
                     No devices linked. Add devices by starting an operation.
+                  </div>
+                )}
+              </div>
+
+              {/* Reports & Certificates for Selected Case (PRAHARI Documentation Engine) */}
+              <div style={{ padding: '18px 24px', borderBottom: '1px solid #DDE3EA', backgroundColor: '#FBFCFD' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#1A2330', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Case Reports & Admissible Certificates
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4, backgroundColor: '#EDFAF3', color: '#16A34A' }}>
+                      Cryptographically Sealed
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 12, color: '#647184' }}>
+                    Click any document to inspect or print
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>
+                  {/* Forensic Recovery Docs */}
+                  {recOp && (
+                    <>
+                      <div style={{ padding: '12px 14px', borderRadius: 8, backgroundColor: '#FFFFFF', border: '1px solid #DDE3EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ color: '#1E8F7A', fontSize: 13, fontWeight: 700 }}>✓</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>Forensic Report</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: '#647184', marginTop: 2 }}>
+                            {recOp.operationId} · {recOp.recoveredCount || 4} files carved
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent('reforge:view_document', { detail: { caseId: selectedCase.id, docType: 'forensic' } }));
+                            navigate('reports');
+                          }}
+                          style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #1E8F7A', backgroundColor: '#EDFAF3', color: '#1E8F7A', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          View Report →
+                        </button>
+                      </div>
+
+                      <div style={{ padding: '12px 14px', borderRadius: 8, backgroundColor: '#FFFFFF', border: '1px solid #DDE3EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ color: '#1E8F7A', fontSize: 13, fontWeight: 700 }}>✓</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>§65B(4) Certificate</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: '#647184', marginTop: 2 }}>
+                            BSA 2023 court-admissible certificate
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent('reforge:view_document', { detail: { caseId: selectedCase.id, docType: 'section65b' } }));
+                            navigate('reports');
+                          }}
+                          style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #1E8F7A', backgroundColor: '#EDFAF3', color: '#1E8F7A', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          View Cert →
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Sanitization / Erasure Docs */}
+                  {eraseOp && (
+                    <>
+                      <div style={{ padding: '12px 14px', borderRadius: 8, backgroundColor: '#FFFFFF', border: '1px solid #DDE3EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ color: '#2563EB', fontSize: 13, fontWeight: 700 }}>✓</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>Erasure Report</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: '#647184', marginTop: 2 }}>
+                            {eraseOp.operationId} · Technical erasure log
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent('reforge:view_document', { detail: { caseId: selectedCase.id, docType: 'erasure' } }));
+                            navigate('reports');
+                          }}
+                          style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #2563EB', backgroundColor: '#EFF6FF', color: '#2563EB', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          View Report →
+                        </button>
+                      </div>
+
+                      <div style={{ padding: '12px 14px', borderRadius: 8, backgroundColor: '#FFFFFF', border: '1px solid #DDE3EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ color: '#2563EB', fontSize: 13, fontWeight: 700 }}>✓</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>Sanitization Certificate</span>
+                          </div>
+                          <div style={{ fontSize: 11, color: '#647184', marginTop: 2 }}>
+                            NIST SP 800-88 / IEEE 2883-2022 Verified
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            window.dispatchEvent(new CustomEvent('reforge:view_document', { detail: { caseId: selectedCase.id, docType: 'sanitization' } }));
+                            navigate('reports');
+                          }}
+                          style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #2563EB', backgroundColor: '#EFF6FF', color: '#2563EB', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+                        >
+                          View Cert →
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Always Chain of Custody */}
+                  <div style={{ padding: '12px 14px', borderRadius: 8, backgroundColor: '#FFFFFF', border: '1px solid #DDE3EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ color: '#1E8F7A', fontSize: 13, fontWeight: 700 }}>✓</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>Chain of Custody Record</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: '#647184', marginTop: 2 }}>
+                        Sequential custody ledger ({custodyRecords.length} logged events)
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('reforge:view_document', { detail: { caseId: selectedCase.id, docType: 'custody' } }));
+                        navigate('reports');
+                      }}
+                      style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #647184', backgroundColor: '#F8FAFC', color: '#1A2330', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      View Ledger →
+                    </button>
+                  </div>
+                </div>
+
+                {/* Specific Case Operational Context Note */}
+                {recOp && !eraseOp && (
+                  <div style={{ marginTop: 12, padding: '7px 12px', borderRadius: 6, backgroundColor: '#E8F5F2', border: '1px solid #C2E7DD', fontSize: 11, color: '#1E8F7A', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconInfo size={12} style={{ stroke: '#1E8F7A' }} />
+                    Evidence Preservation Mode: Physical storage media preserved for court proceedings. Media sanitization was not performed.
+                  </div>
+                )}
+                {eraseOp && !recOp && (
+                  <div style={{ marginTop: 12, padding: '7px 12px', borderRadius: 6, backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', fontSize: 11, color: '#2563EB', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconInfo size={12} style={{ stroke: '#2563EB' }} />
+                    Media Decommissioning Mode: Drive sanitized with certified zero remanence. Data recovery was not requested for this case.
+                  </div>
+                )}
+                {!recOp && !eraseOp && (
+                  <div style={{ marginTop: 12, padding: '7px 12px', borderRadius: 6, backgroundColor: '#FEF8EC', border: '1px solid #FDE6B0', fontSize: 11, color: '#B8862E', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconAlertTriangle size={12} style={{ stroke: '#B8862E' }} />
+                    Evidence Intake Mode: Device currently quarantined. Run a Recovery scan or Drive Sanitization to generate technical certificates.
                   </div>
                 )}
               </div>

@@ -69,16 +69,17 @@ export interface CustodyRecord {
   timestamp: string;
 }
 
-const STORAGE_OPS_KEY = 'reforge_completed_operations_v2';
-const STORAGE_CUSTODY_KEY = 'reforge_custody_records_v2';
+const STORAGE_OPS_KEY = 'reforge_completed_operations_v3';
+const STORAGE_CUSTODY_KEY = 'reforge_custody_records_v3';
 
 const SEED_OPERATIONS: OperationRecord[] = [
+  // ── CASE 1: Both Recovery & Erasing Done (Case #2024-CF-0892) ─────────────
   {
     operationId: 'REC-2026-8819',
     type: 'recovery',
     status: 'completed',
     caseId: '2024-CF-0892',
-    caseName: 'SIH Case #26149: Digital Forensics & Data Sanitization Audit',
+    caseName: 'State v. Meridian Corp',
     deviceModel: 'WD PC SN810 SDCPNRY-512G-1006',
     deviceSerial: 'E823_8FA6_BF53_0001_001B_448B_4A85_2466',
     deviceCapacity: '512.11 GB',
@@ -150,7 +151,7 @@ const SEED_OPERATIONS: OperationRecord[] = [
     type: 'erase',
     status: 'verified',
     caseId: '2024-CF-0892',
-    caseName: 'SIH Case #26149: Digital Forensics & Data Sanitization Audit',
+    caseName: 'State v. Meridian Corp',
     deviceModel: 'WD PC SN810 SDCPNRY-512G-1006',
     deviceSerial: 'E823_8FA6_BF53_0001_001B_448B_4A85_2466',
     deviceCapacity: '512.11 GB',
@@ -158,8 +159,8 @@ const SEED_OPERATIONS: OperationRecord[] = [
     timestamp: '2026-09-25 14:20:00 UTC',
     examiner: 'Supervisor Abhinay',
     badgeNo: 'IN-DF-8819',
-    eraseMethod: 'NIST SP 800-88 Rev. 1 Cryptographic Erase + Block Overwrite (NVMe Format Sanitize)',
-    standard: 'NIST SP 800-88 Rev. 1 · IEEE 2883-2022 · DoD 5220.22-M',
+    eraseMethod: 'NIST SP 800-88 Rev. 2 Cryptographic Erase + Block Overwrite',
+    standard: 'NIST SP 800-88 Rev. 2 · IEEE 2883-2022 · DoD 5220.22-M',
     entropy: '7.9998 bits/byte (Certified Zero Remanence)',
     remnantSignatures: 0,
     sha256Seal: 'd8c3f4e8b2a1059c47e8910d65b734fc8921a4f0923184ecbf0912d76a54e128',
@@ -172,20 +173,78 @@ const SEED_OPERATIONS: OperationRecord[] = [
       },
     ],
   },
+
+  // ── CASE 2: ONLY Recovery Done (Case #2024-CF-0884: Procurement Fraud) ──────
+  {
+    operationId: 'REC-2026-0884',
+    type: 'recovery',
+    status: 'completed',
+    caseId: '2024-CF-0884',
+    caseName: 'Procurement Fraud Investigation',
+    deviceModel: 'Kingston Canvas React Plus microSDXC 128GB',
+    deviceSerial: 'KINGSTON_SD_128G_884920',
+    deviceCapacity: '128.00 GB',
+    deviceInterface: 'SDXC UHS-II / USB 3.2 Reader',
+    timestamp: '2026-09-10 16:30:00 UTC',
+    examiner: 'Examiner A. Patel',
+    badgeNo: 'IN-DF-9412',
+    scanMethod: 'Deep Signature Carving + ExFAT Cluster Chain Reconstruction',
+    recoveredCount: 4,
+    recoveredFiles: [
+      {
+        id: 'rec-pf-01',
+        name: 'Procurement_Bids_Comparison_2024.xlsx',
+        type: 'Excel Spreadsheet',
+        size: '1.8 MB',
+        confidence: 'high',
+        hash: 'b4a8c9e1f2d3a4b5c6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9',
+        path: 'D:\\Evidence\\Fraud_Invoices\\Carved_XLSX_0884_1.xlsx',
+      },
+      {
+        id: 'rec-pf-02',
+        name: 'Vendor_Kickback_Ledger_Confidential.pdf',
+        type: 'PDF Document',
+        size: '3.2 MB',
+        confidence: 'high',
+        hash: 'c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9',
+        path: 'D:\\Evidence\\Fraud_Invoices\\Carved_PDF_0884_2.pdf',
+      },
+      {
+        id: 'rec-pf-03',
+        name: 'Whistleblower_Audio_Recording_Sep24.wav',
+        type: 'WAV Audio',
+        size: '14.6 MB',
+        confidence: 'high',
+        hash: 'd0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1',
+        path: 'D:\\Evidence\\Fraud_Invoices\\Carved_WAV_0884_3.wav',
+      },
+      {
+        id: 'rec-pf-04',
+        name: 'Encrypted_Communications_Archive.7z',
+        type: '7-Zip Archive',
+        size: '8.4 MB',
+        confidence: 'medium',
+        hash: 'e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3',
+        path: 'D:\\Evidence\\Fraud_Invoices\\Carved_7Z_0884_4.7z',
+      },
+    ],
+  },
+
+  // ── CASE 3: ONLY Erase Done (Case #2024-CF-0887: Internal HR Investigation) ──
   {
     operationId: 'ERASE-2026-0887',
     type: 'erase',
     status: 'verified',
     caseId: '2024-CF-0887',
-    caseName: 'Case #2024-CF-0887: Internal HR Investigation — R. Sharma',
+    caseName: 'Internal HR Investigation — R. Sharma',
     deviceModel: 'WD Black NVMe 1TB (NVMe0)',
     deviceSerial: 'WD_WDS100T3X0C_00SJG0_210984801294',
     deviceCapacity: '1000.20 GB',
     deviceInterface: 'NVMe PCIe Gen3 x4',
     timestamp: '2026-09-11 11:05:00 UTC',
-    examiner: 'R. Kumar',
+    examiner: 'Examiner R. Kumar',
     badgeNo: 'IN-DF-9104',
-    eraseMethod: 'NIST SP 800-88 Rev. 2 Clear + 3-Pass DoD 5220.22-M',
+    eraseMethod: 'NIST SP 800-88 Rev. 2 Clear + 3-Pass DoD 5220.22-M Overwrite',
     standard: 'NIST SP 800-88 Rev. 2 · IEEE 2883-2022 · DoD 5220.22-M',
     entropy: '7.9999 bits/byte (Certified Zero Remanence)',
     remnantSignatures: 0,
@@ -202,6 +261,7 @@ const SEED_OPERATIONS: OperationRecord[] = [
 ];
 
 const SEED_CUSTODY: CustodyRecord[] = [
+  // Case 2024-CF-0892 (Both)
   {
     id: 'CUST-001',
     caseId: '2024-CF-0892',
@@ -210,7 +270,7 @@ const SEED_CUSTODY: CustodyRecord[] = [
     fromPerson: 'Hardware Intake (Workstation-ABHI)',
     toPerson: 'Inspector Abhinay',
     location: 'Cyber Forensics Lab 1',
-    reason: 'Physical evidence acquisition under warrant',
+    reason: 'Physical evidence acquisition under court warrant',
     timestamp: '2026-09-24 09:00:00 UTC',
   },
   {
@@ -243,9 +303,11 @@ const SEED_CUSTODY: CustodyRecord[] = [
     fromPerson: 'Inspector Abhinay',
     toPerson: 'Supervisor Abhinay',
     location: 'Sanitization Facility',
-    reason: 'Secure media sanitization verified under NIST SP 800-88 Rev. 1. (Op: ERASE-2026-4421)',
+    reason: 'Secure media sanitization verified under NIST SP 800-88 Rev. 2. (Op: ERASE-2026-4421)',
     timestamp: '2026-09-25 14:20:00 UTC',
   },
+
+  // Case 2024-CF-0887 (Only Erasing)
   {
     id: 'CUST-005',
     caseId: '2024-CF-0887',
@@ -265,9 +327,11 @@ const SEED_CUSTODY: CustodyRecord[] = [
     fromPerson: 'Examiner R. Kumar',
     toPerson: 'HR Director',
     location: 'Decommissioning Lab',
-    reason: 'NIST SP 800-88 Rev. 2 Sanitization verified prior to employee re-issuance',
+    reason: 'NIST SP 800-88 Rev. 2 Sanitization verified prior to employee re-issuance (Op: ERASE-2026-0887)',
     timestamp: '2026-09-11 11:05:00 UTC',
   },
+
+  // Case 2024-CF-0884 (Only Recovery)
   {
     id: 'CUST-007',
     caseId: '2024-CF-0884',
@@ -276,8 +340,43 @@ const SEED_CUSTODY: CustodyRecord[] = [
     fromPerson: 'Finance Audit Officer',
     toPerson: 'Examiner A. Patel',
     location: 'Evidence Vault B',
-    reason: 'Procurement Fraud suspect microSD evidence',
+    reason: 'Procurement Fraud suspect microSD evidence seizure',
     timestamp: '2026-09-08 14:00:00 UTC',
+  },
+  {
+    id: 'CUST-008',
+    caseId: '2024-CF-0884',
+    deviceSerial: 'KINGSTON_SD_128G_884920',
+    eventType: 'write-blocked',
+    fromPerson: 'Examiner A. Patel',
+    toPerson: 'Examiner A. Patel',
+    location: 'Forensics Workstation-PATEL',
+    reason: 'Write-block bridge engaged to preserve integrity for court admissibility',
+    timestamp: '2026-09-08 14:30:00 UTC',
+  },
+  {
+    id: 'CUST-009',
+    caseId: '2024-CF-0884',
+    deviceSerial: 'KINGSTON_SD_128G_884920',
+    eventType: 'analyzed',
+    fromPerson: 'Examiner A. Patel',
+    toPerson: 'Examiner A. Patel',
+    location: 'Cyber Forensics Lab 2',
+    reason: 'Targeted recovery scan completed. Carved 4 key procurement bid documents. (Op: REC-2026-0884)',
+    timestamp: '2026-09-10 16:30:00 UTC',
+  },
+
+  // Case 2024-CF-0880 (Pending Intake)
+  {
+    id: 'CUST-010',
+    caseId: '2024-CF-0880',
+    deviceSerial: 'PENDING_SERIAL_0880',
+    eventType: 'collected',
+    fromPerson: 'IT Security Desk',
+    toPerson: 'Investigator S. Mehta',
+    location: 'Evidence Quarantine Locker 4',
+    reason: 'Suspect media logged into evidence custody pending forensic authorization',
+    timestamp: '2026-09-05 10:00:00 UTC',
   },
 ];
 

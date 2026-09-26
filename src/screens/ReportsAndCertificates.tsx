@@ -28,10 +28,10 @@ interface ReportsProps {
 export type DocTabType = 'forensic' | 'erasure' | 'section65b' | 'sanitization' | 'custody';
 
 const CASE_OPTIONS = [
-  { id: '2024-CF-0892', name: 'Case #2024-CF-0892: State v. Meridian Corp', shortTitle: 'State v. Meridian Corp' },
-  { id: '2024-CF-0887', name: 'Case #2024-CF-0887: Internal HR Investigation — R. Sharma', shortTitle: 'Internal HR Investigation' },
-  { id: '2024-CF-0884', name: 'Case #2024-CF-0884: Procurement Fraud Investigation', shortTitle: 'Procurement Fraud Investigation' },
-  { id: '2024-CF-0880', name: 'Case #2024-CF-0880: Ex-employee IP Theft', shortTitle: 'Ex-employee IP Theft' },
+  { id: '2024-CF-0892', name: 'Case #2024-CF-0892: State v. Meridian Corp (Both Recovery & Erase)', shortTitle: 'State v. Meridian Corp', mode: 'both' },
+  { id: '2024-CF-0884', name: 'Case #2024-CF-0884: Procurement Fraud (Recovery Only)', shortTitle: 'Procurement Fraud', mode: 'recovery' },
+  { id: '2024-CF-0887', name: 'Case #2024-CF-0887: Internal HR Investigation (Erase Only)', shortTitle: 'Internal HR Investigation', mode: 'erase' },
+  { id: '2024-CF-0880', name: 'Case #2024-CF-0880: Ex-employee IP Theft (Intake Pending)', shortTitle: 'Ex-employee IP Theft', mode: 'pending' },
 ];
 
 export default function ReportsAndCertificates({
@@ -66,11 +66,11 @@ export default function ReportsAndCertificates({
     const handleOpCompleted = () => loadOps();
     window.addEventListener('reforge:operation_completed', handleOpCompleted);
     window.addEventListener('reforge:view_document', ((e: CustomEvent) => {
-      if (e.detail?.docType) {
-        setActiveDoc(e.detail.docType as DocTabType);
-      }
       if (e.detail?.caseId) {
         setSelectedCaseId(e.detail.caseId);
+      }
+      if (e.detail?.docType) {
+        setActiveDoc(e.detail.docType as DocTabType);
       }
     }) as EventListener);
 
@@ -82,9 +82,9 @@ export default function ReportsAndCertificates({
   const recoveryOp = getCompletedRecovery(selectedCaseId);
   const eraseOp = getCompletedErase(selectedCaseId);
   const verifiedEraseOp = getVerifiedErase(selectedCaseId);
-  const selectedCaseObj = CASE_OPTIONS.find(c => c.id === selectedCaseId) || { id: selectedCaseId, name: `Case #${selectedCaseId}`, shortTitle: `Case #${selectedCaseId}` };
+  const selectedCaseObj = CASE_OPTIONS.find(c => c.id === selectedCaseId) || { id: selectedCaseId, name: `Case #${selectedCaseId}`, shortTitle: `Case #${selectedCaseId}`, mode: 'unknown' };
 
-  // Availability flags
+  // Availability flags strictly matching PRAHARI documentation rules
   const isForensicAvailable = Boolean(recoveryOp);
   const isSection65bAvailable = Boolean(recoveryOp);
   const isErasureAvailable = Boolean(eraseOp);
@@ -157,7 +157,8 @@ export default function ReportsAndCertificates({
   };
 
   // ── Document Tabs Configuration ───────────────────────────────────────────
-  const tabs: Array<{
+  // ── Document Tabs Configuration ───────────────────────────────────────────
+  const allTabs: Array<{
     id: DocTabType;
     label: string;
     isAvailable: boolean;
@@ -201,10 +202,20 @@ export default function ReportsAndCertificates({
     },
   ];
 
+  // Only display tabs that are available/generated for the operations performed in this case
+  const tabs = allTabs.filter(t => t.isAvailable);
+
+  // Auto-switch to valid document if current activeDoc is not in available tabs
+  useEffect(() => {
+    if (tabs.length > 0 && !tabs.some(t => t.id === activeDoc)) {
+      setActiveDoc(tabs[0].id);
+    }
+  }, [selectedCaseId, isForensicAvailable, isErasureAvailable, isSanitizationAvailable]);
+
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 60 }}>
       {/* Screen Header */}
-      <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 14 }}>
+      <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 14 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <h1 style={{ fontSize: 24, fontWeight: 700, color: '#1A2330', letterSpacing: '-0.02em', margin: 0 }}>
@@ -277,6 +288,54 @@ export default function ReportsAndCertificates({
         </div>
       </div>
 
+      {/* Case Document Scope Indicator */}
+      <div className="no-print" style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 16,
+        padding: '10px 16px', borderRadius: 8, backgroundColor: '#FFFFFF', border: '1px solid #DDE3EA',
+        fontSize: 12, color: '#475569', flexWrap: 'wrap'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontWeight: 700, color: '#1A2330' }}>
+            Case #{selectedCaseId} ({selectedCaseObj.shortTitle}):
+          </span>
+          {isForensicAvailable && isErasureAvailable && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 4,
+              backgroundColor: '#EDFAF3', color: '#16A34A', fontWeight: 600, fontSize: 11
+            }}>
+              ✓ Both Performed (Recovery & Erasing — Showing all 4 Reports/Certificates + Custody)
+            </span>
+          )}
+          {isForensicAvailable && !isErasureAvailable && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 4,
+              backgroundColor: '#E8F5F2', color: '#1E8F7A', fontWeight: 600, fontSize: 11
+            }}>
+              ✓ Recovery Only (Showing Forensic Report & §65B Certificate — Media Preserved for Court)
+            </span>
+          )}
+          {!isForensicAvailable && isErasureAvailable && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 4,
+              backgroundColor: '#EFF6FF', color: '#2563EB', fontWeight: 600, fontSize: 11
+            }}>
+              ✓ Erasing Only (Showing Erasure Report & Certificate of Sanitization — Zero Remanence)
+            </span>
+          )}
+          {!isForensicAvailable && !isErasureAvailable && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 4,
+              backgroundColor: '#FEF8EC', color: '#B8862E', fontWeight: 600, fontSize: 11
+            }}>
+              ℹ Intake Pending (No Recovery or Erase Executed Yet)
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: 11, color: '#647184' }}>
+          {tabs.length} Document{tabs.length !== 1 ? 's' : ''} Generated for this Case
+        </div>
+      </div>
+
       {/* Conditional Document Tabs */}
       <div className="no-print" style={{
         display: 'flex', flexWrap: 'wrap', gap: 8, padding: 4, backgroundColor: '#E9EEF4', borderRadius: 10,
@@ -284,78 +343,28 @@ export default function ReportsAndCertificates({
       }}>
         {tabs.map((tab) => {
           const isSelected = activeDoc === tab.id;
-          const disabled = !tab.isAvailable;
 
           return (
-            <div key={tab.id} style={{ position: 'relative' }} title={disabled ? tab.unavailableReason : undefined}>
-              <button
-                disabled={disabled}
-                onClick={() => setActiveDoc(tab.id)}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '8px 16px', borderRadius: 7, border: 'none',
-                  backgroundColor: isSelected ? '#FFFFFF' : 'transparent',
-                  color: disabled ? '#94A3B8' : isSelected ? '#0F172A' : '#475569',
-                  fontWeight: isSelected ? 700 : 500,
-                  fontSize: 13, cursor: disabled ? 'not-allowed' : 'pointer',
-                  boxShadow: isSelected ? '0 1px 3px rgba(16,21,27,0.08)' : 'none',
-                  opacity: disabled ? 0.6 : 1,
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                {tab.isAvailable ? (
-                  <span style={{ color: '#16A34A', fontSize: 12 }}>✓</span>
-                ) : (
-                  <span style={{ color: '#94A3B8', fontSize: 11 }}>⊘</span>
-                )}
-                <span>{tab.label}</span>
-              </button>
-            </div>
+            <button
+              key={tab.id}
+              onClick={() => setActiveDoc(tab.id)}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '8px 16px', borderRadius: 7, border: 'none',
+                backgroundColor: isSelected ? '#FFFFFF' : 'transparent',
+                color: isSelected ? '#0F172A' : '#475569',
+                fontWeight: isSelected ? 700 : 500,
+                fontSize: 13, cursor: 'pointer',
+                boxShadow: isSelected ? '0 1px 3px rgba(16,21,27,0.08)' : 'none',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <span style={{ color: '#16A34A', fontSize: 12 }}>✓</span>
+              <span>{tab.label}</span>
+            </button>
           );
         })}
       </div>
-
-      {/* If current selected doc is not available, show plain reason */}
-      {(() => {
-        const curTab = tabs.find(t => t.id === activeDoc);
-        if (curTab && !curTab.isAvailable) {
-          return (
-            <div className="no-print" style={{
-              backgroundColor: '#FFFFFF', borderRadius: 12, border: '1.5px solid #CBD5E1',
-              padding: '36px', textAlign: 'center', marginBottom: 24
-            }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', marginBottom: 6 }}>
-                {curTab.label}
-              </div>
-              <div style={{ fontSize: 14, color: '#64748B', maxWidth: 460, margin: '0 auto 20px' }}>
-                {curTab.unavailableReason}
-              </div>
-              {curTab.id.includes('sanitization') || curTab.id.includes('erasure') ? (
-                <button
-                  onClick={() => navigate('erase')}
-                  style={{
-                    padding: '9px 18px', borderRadius: 8, border: 'none',
-                    backgroundColor: '#0D9488', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer'
-                  }}
-                >
-                  Go to Drive Sanitization
-                </button>
-              ) : (
-                <button
-                  onClick={() => navigate('recovery')}
-                  style={{
-                    padding: '9px 18px', borderRadius: 8, border: 'none',
-                    backgroundColor: '#0D9488', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer'
-                  }}
-                >
-                  Go to Data Recovery
-                </button>
-              )}
-            </div>
-          );
-        }
-        return null;
-      })()}
 
       {/* Official Certificate / Report Canvas */}
       {tabs.find(t => t.id === activeDoc)?.isAvailable && (
