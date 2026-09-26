@@ -635,7 +635,8 @@ export default function Erase({ device, navigate }: EraseProps) {
                 <IconShieldLock size={20} style={{ stroke: '#C6394A' }} />
               </div>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: '#1A2330' }}>
+                <div style={{ fontSize: 16, fontWeight: 600, color: '#1A2330', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span className="pulse-dot" style={{ backgroundColor: '#C6394A' }} />
                   {phaseLabel}
                 </div>
                 <div style={{ fontSize: 13, color: '#647184' }}>{deviceName}</div>
@@ -651,6 +652,7 @@ export default function Erase({ device, navigate }: EraseProps) {
               </div>
               <div style={{ height: 10, borderRadius: 5, backgroundColor: '#F0F3F6', overflow: 'hidden' }}>
                 <div
+                  className={progress < 100 ? 'bar-shimmer' : undefined}
                   style={{
                     height: '100%', borderRadius: 5, backgroundColor: '#C6394A',
                     width: `${progress}%`, transition: 'width 0.15s linear',
@@ -691,6 +693,7 @@ export default function Erase({ device, navigate }: EraseProps) {
               </div>
               <div style={{ height: 8, borderRadius: 4, backgroundColor: '#EEF0FB', overflow: 'hidden' }}>
                 <div
+                  className="bar-animated"
                   style={{
                     height: '100%', borderRadius: 4,
                     background: 'linear-gradient(90deg, #4C5FC7, #1E8F7A)',

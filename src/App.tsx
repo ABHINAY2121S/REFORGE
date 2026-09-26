@@ -171,7 +171,7 @@ export default function App() {
         userName={state.userName}
       />
 
-      <main className="app-main">
+      <main className="app-main" key={state.currentScreen} style={{ animation: 'screen-enter var(--anim-screen) ease both' }}>
         {state.currentScreen === 'dashboard' && (
           <Dashboard
             navigate={navigate}

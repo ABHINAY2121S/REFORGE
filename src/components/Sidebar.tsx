@@ -80,6 +80,7 @@ export default function Sidebar({ currentScreen, navigate, userRole, userName }:
             <button
               key={screen}
               onClick={() => navigate(screen)}
+              className={isActive ? 'nav-item-active' : undefined}
               style={{
                 width: '100%',
                 display: 'flex',
@@ -91,12 +92,12 @@ export default function Sidebar({ currentScreen, navigate, userRole, userName }:
                 cursor: 'pointer',
                 backgroundColor: isActive ? '#FFFFFF' : 'transparent',
                 color: isActive ? '#1A2330' : '#647184',
-                fontWeight: isActive ? 500 : 400,
+                fontWeight: isActive ? 600 : 400,
                 fontSize: 14,
                 textAlign: 'left',
                 marginBottom: 2,
-                boxShadow: isActive ? '0 1px 2px rgba(16,21,27,0.06)' : 'none',
-                transition: 'background-color 0.1s ease, color 0.1s ease',
+                boxShadow: isActive ? '0 1px 3px rgba(16,21,27,0.08)' : 'none',
+                transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) {
@@ -125,6 +126,7 @@ export default function Sidebar({ currentScreen, navigate, userRole, userName }:
 
         <button
           onClick={() => navigate('settings')}
+          className={activeScreen === 'settings' ? 'nav-item-active' : undefined}
           style={{
             width: '100%',
             display: 'flex',
@@ -136,11 +138,12 @@ export default function Sidebar({ currentScreen, navigate, userRole, userName }:
             cursor: 'pointer',
             backgroundColor: activeScreen === 'settings' ? '#FFFFFF' : 'transparent',
             color: activeScreen === 'settings' ? '#1A2330' : '#647184',
-            fontWeight: activeScreen === 'settings' ? 500 : 400,
+            fontWeight: activeScreen === 'settings' ? 600 : 400,
             fontSize: 14,
             textAlign: 'left',
             marginBottom: 2,
-            transition: 'background-color 0.1s ease, color 0.1s ease',
+            boxShadow: activeScreen === 'settings' ? '0 1px 3px rgba(16,21,27,0.08)' : 'none',
+            transition: 'background-color 0.15s ease, color 0.15s ease, transform 0.15s ease',
           }}
           onMouseEnter={(e) => {
             if (activeScreen !== 'settings') {

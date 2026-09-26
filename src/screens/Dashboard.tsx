@@ -50,6 +50,39 @@ const auditTypeColors = {
   danger: '#C6394A',
 };
 
+function AnimatedStat({ value }: { value: string | number }) {
+  const num = parseInt(String(value), 10);
+  const [display, setDisplay] = useState(isNaN(num) ? value : 0);
+
+  useEffect(() => {
+    if (isNaN(num)) {
+      setDisplay(value);
+      return;
+    }
+    const duration = 650;
+    const startTime = performance.now();
+    let frameId: number;
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(ease * num));
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(animate);
+      } else {
+        setDisplay(num);
+      }
+    };
+
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, [value, num]);
+
+  return <span>{display}</span>;
+}
+
 interface NewOpModalProps {
   onClose: () => void;
   navigate: (screen: Screen) => void;
@@ -173,14 +206,16 @@ export default function Dashboard({ navigate, userName, activeCaseName, userRole
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 28 }}>
             {auditorStats.map(({ label, value, icon: Icon, color }) => (
-              <div key={label} style={{ backgroundColor: '#FFFFFF', borderRadius: 10, padding: '18px 20px', boxShadow: '0 1px 3px rgba(16,21,27,0.07), 0 0 0 1px rgba(16,21,27,0.04)' }}>
+              <div key={label} className="card card--clickable" style={{ padding: '18px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <span style={{ fontSize: 12, fontWeight: 500, color: '#647184' }}>{label}</span>
                   <div style={{ width: 30, height: 30, borderRadius: 7, backgroundColor: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon size={15} style={{ color, stroke: color }} />
                   </div>
                 </div>
-                <div style={{ fontSize: 28, fontWeight: 700, color: '#1A2330', lineHeight: 1 }}>{value}</div>
+                <div className="stat-pop" style={{ fontSize: 28, fontWeight: 700, color: '#1A2330', lineHeight: 1 }}>
+                  <AnimatedStat value={value} />
+                </div>
               </div>
             ))}
           </div>
@@ -289,9 +324,9 @@ export default function Dashboard({ navigate, userName, activeCaseName, userRole
           {stats.map(({ label, value, icon: Icon, color }) => (
             <div
               key={label}
+              className="card card--clickable"
               style={{
-                backgroundColor: '#FFFFFF', borderRadius: 10, padding: '18px 20px',
-                boxShadow: '0 1px 3px rgba(16,21,27,0.07), 0 0 0 1px rgba(16,21,27,0.04)',
+                padding: '18px 20px',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -306,8 +341,8 @@ export default function Dashboard({ navigate, userName, activeCaseName, userRole
                   <Icon size={15} style={{ color, stroke: color }} />
                 </div>
               </div>
-              <div style={{ fontSize: 28, fontWeight: 700, color: '#1A2330', lineHeight: 1 }}>
-                {value}
+              <div className="stat-pop" style={{ fontSize: 28, fontWeight: 700, color: '#1A2330', lineHeight: 1 }}>
+                <AnimatedStat value={value} />
               </div>
             </div>
           ))}

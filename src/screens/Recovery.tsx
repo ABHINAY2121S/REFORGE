@@ -359,7 +359,11 @@ function CompareCandidatesPanel({
                         <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 500, color: cc }}>{cand.confidence}%</span>
                       </div>
                       <div style={{ height: 6, borderRadius: 3, backgroundColor: '#F0F3F6', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${cand.confidence}%`, borderRadius: 3, backgroundColor: cc }} />
+                        <div
+                          key={`cand-${cand.id}`}
+                          className="bar-animated"
+                          style={{ height: '100%', width: `${cand.confidence}%`, borderRadius: 3, backgroundColor: cc }}
+                        />
                       </div>
                     </div>
 
@@ -935,7 +939,10 @@ export default function Recovery({ device, navigate, initialTargetPaths }: Recov
                 {progress < 100 && <span style={{ fontSize: 12, color: '#334155', fontWeight: 600, fontFamily: 'JetBrains Mono, monospace' }}>~{eta}m remaining</span>}
               </div>
               <div style={{ height: 8, borderRadius: 4, backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: 4, backgroundColor: '#0D9488', width: `${progress}%`, transition: 'width 0.15s linear' }} />
+                <div
+                  className={progress < 100 ? 'bar-shimmer' : undefined}
+                  style={{ height: '100%', borderRadius: 4, backgroundColor: '#0D9488', width: `${progress}%`, transition: 'width 0.15s linear' }}
+                />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 24, fontSize: 13, color: '#334155', fontWeight: 500 }}>
@@ -1232,7 +1239,11 @@ export default function Recovery({ device, navigate, initialTargetPaths }: Recov
                       <span style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 700, color: item.color }}>{item.value}%</span>
                     </div>
                     <div style={{ height: 6, borderRadius: 3, backgroundColor: '#F1F5F9', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${item.value}%`, borderRadius: 3, backgroundColor: item.color }} />
+                      <div
+                        key={`${selectedFile.id}-${item.label}`}
+                        className="bar-animated"
+                        style={{ height: '100%', width: `${item.value}%`, borderRadius: 3, backgroundColor: item.color }}
+                      />
                     </div>
                   </div>
                 ))}

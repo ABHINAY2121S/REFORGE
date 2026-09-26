@@ -74,6 +74,7 @@ function DeviceCard({ device, isSelected, onSelect }: DeviceCardProps) {
 
   return (
     <div
+      className="card card--clickable"
       style={{
         backgroundColor: '#FFFFFF',
         borderRadius: 10,

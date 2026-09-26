@@ -47,6 +47,53 @@
   /* Transition */
   --transition-fast: 120ms ease;
   --transition-normal: 200ms ease;
+
+  /* Animation durations */
+  --anim-screen: 220ms;
+  --anim-bar: 700ms;
+  --anim-card: 180ms;
+}
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+
+@keyframes screen-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bar-fill {
+  from { width: 0 !important; }
+}
+
+@keyframes count-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0 rgba(30, 143, 122, 0.4); }
+  70%  { box-shadow: 0 0 0 8px rgba(30, 143, 122, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(30, 143, 122, 0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
 /* ── Global reset ─────────────────────────────────────────────── */
@@ -123,6 +170,26 @@ body {
   background-color: var(--bg-base);
 }
 
+/* ── Screen entrance ─────────────────────────────────────────── */
+
+/* Wrap each screen's root div with this to get page transitions */
+.screen-enter {
+  animation: screen-enter var(--anim-screen) ease both;
+}
+
+/* Stagger children in lists */
+.stagger-children > * {
+  animation: slide-up 280ms ease both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 280ms; }
+
 /* ── Cards / surfaces ─────────────────────────────────────────── */
 
 .card {
@@ -131,11 +198,28 @@ body {
   border-radius: var(--radius-md);
   padding: var(--space-6);
   box-shadow: 0 1px 3px rgba(16, 21, 27, 0.05);
+  transition: box-shadow var(--anim-card) ease, transform var(--anim-card) ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 16px rgba(16, 21, 27, 0.10);
+  transform: translateY(-1px);
 }
 
 .card--elevated {
   background: var(--surface-elevated);
   box-shadow: 0 4px 12px rgba(16, 21, 27, 0.08);
+}
+
+/* Clickable card — stronger hover lift */
+.card--clickable {
+  cursor: pointer;
+  transition: box-shadow var(--anim-card) ease, transform var(--anim-card) ease, border-color var(--anim-card) ease;
+}
+.card--clickable:hover {
+  box-shadow: 0 6px 20px rgba(16, 21, 27, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--accent-teal);
 }
 
 /* ── Buttons ──────────────────────────────────────────────────── */
@@ -154,10 +238,10 @@ body {
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
-.btn-primary:hover  { background: #166e5e; }
-.btn-primary:active { transform: translateY(1px); }
+.btn-primary:hover  { background: #166e5e; box-shadow: 0 4px 12px rgba(13,148,136,0.3); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(1px); box-shadow: none; }
 .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
 /* Danger — ONLY for destructive erase actions. Never decorative. */
@@ -174,10 +258,10 @@ body {
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
 }
-.btn-danger:hover  { background: #ca4f58; }
-.btn-danger:active { transform: translateY(1px); }
+.btn-danger:hover  { background: #ca4f58; box-shadow: 0 4px 12px rgba(220,38,38,0.3); transform: translateY(-1px); }
+.btn-danger:active { transform: translateY(1px); box-shadow: none; }
 .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
 .btn-secondary {
@@ -221,6 +305,56 @@ input:focus, select:focus {
 
 input::placeholder {
   color: var(--text-secondary);
+}
+
+/* ── Animated progress bars ──────────────────────────────────── */
+
+/* Apply .bar-animated to any progress fill div — it grows from 0 */
+.bar-animated {
+  animation: bar-fill var(--anim-bar) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Striped shimmer for in-progress bars */
+.bar-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.25) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s linear infinite;
+}
+
+/* Live pulse dot (replaces static dot for active operations) */
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-teal);
+  animation: pulse-ring 1.8s ease infinite;
+}
+
+/* Stat number count-up pop */
+.stat-pop {
+  animation: count-pulse 400ms ease both;
+}
+
+/* Sidebar active nav item — left accent bar */
+.nav-item-active {
+  position: relative;
+}
+.nav-item-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  background: var(--accent-teal);
+  border-radius: 0 2px 2px 0;
+  animation: fade-in 150ms ease both;
 }
 
 /* ── Scrollbars ───────────────────────────────────────────────── */
