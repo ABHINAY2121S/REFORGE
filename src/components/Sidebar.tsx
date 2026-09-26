@@ -3,7 +3,7 @@ import {
   IconHome, IconHardDrive, IconSearch, IconShieldLock, IconShieldCheck,
   IconDocument, IconFolder, IconGear, IconUser
 } from './Icons';
-import reforgeLogoUrl from '../assets/reforge-logo.png';
+import reforgeSidebarUrl from '../assets/reforge-sidebar.png';
 
 interface SidebarProps {
   currentScreen: Screen;
@@ -64,11 +64,11 @@ export default function Sidebar({ currentScreen, navigate, userRole, userName }:
       }}
     >
       {/* Logo */}
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid #DDE3EA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ padding: '16px 18px', borderBottom: '1px solid #DDE3EA', display: 'flex', alignItems: 'center' }}>
         <img
-          src={reforgeLogoUrl}
-          alt="REFORGE — Forensic Recovery & Sanitization"
-          style={{ width: 160, height: 'auto', display: 'block' }}
+          src={reforgeSidebarUrl}
+          alt="REFORGE"
+          style={{ height: 34, width: 'auto', display: 'block', objectFit: 'contain' }}
         />
       </div>
 
