@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { UserRole } from '../types';
 import { IconShieldCheck, IconEye } from '../components/Icons';
 
-import reforgeLogoUrl from '../assets/reforge-logo.png';
+import reforgeFullLogoUrl from '../assets/reforge-full-logo.png';
 
 interface LoginProps {
   onLogin: (role: UserRole, name: string) => void;
@@ -49,9 +49,9 @@ export default function Login({ onLogin, authError = '' }: LoginProps) {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <img
-            src={reforgeLogoUrl}
+            src={reforgeFullLogoUrl}
             alt="REFORGE Forensic Recovery & Sanitization"
-            style={{ width: 220, maxWidth: '80%', height: 'auto', display: 'inline-block', marginBottom: 6 }}
+            style={{ width: 250, maxWidth: '90%', height: 'auto', display: 'inline-block' }}
           />
         </div>
 
