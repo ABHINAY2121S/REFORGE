@@ -64,11 +64,11 @@ export default function Sidebar({ currentScreen, navigate, userRole, userName }:
       }}
     >
       {/* Logo */}
-      <div style={{ padding: '16px 18px', borderBottom: '1px solid #DDE3EA', display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid #DDE3EA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <img
           src={reforgeSidebarUrl}
           alt="REFORGE"
-          style={{ height: 34, width: 'auto', display: 'block', objectFit: 'contain' }}
+          style={{ width: '100%', maxWidth: 195, height: 'auto', display: 'block', objectFit: 'contain' }}
         />
       </div>
 
