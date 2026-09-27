@@ -52,13 +52,13 @@ function mockAuditLog(): AuditLogEntry[] {
       result: "success", status: "info",
     },
     {
-      id: "a2", timestamp: "2026-09-24T11:15:32.410Z", user_id: "examiner.abhinay",
+      id: "a2", timestamp: "2026-09-24T11:15:32.410Z", user_id: "examiner.a.patel",
       case_id: MOCK_CASE, evidence_id: "E823_8FA6_BF53_0001_001B_448B_4A85_2466", action_type: "recovery_scan",
-      description: "Advanced forensic carve on Partition 2 (NTFS). Bi-directional signature scanning identified 6 document & image fragments. Integrity confidence >= 92%.",
+      description: "Advanced forensic carve on Partition 2 (NTFS). Bi-directional signature scanning identified 6 document & image fragments. Integrity coherence score >= 0.92.",
       result: "success", status: "success",
     },
     {
-      id: "a3", timestamp: "2026-09-24T11:30:05.884Z", user_id: "examiner.abhinay",
+      id: "a3", timestamp: "2026-09-24T11:30:05.884Z", user_id: "examiner.a.patel",
       case_id: MOCK_CASE, evidence_id: "E823_8FA6_BF53_0001_001B_448B_4A85_2466", action_type: "recovery_export",
       description: "Evidence extraction: 6 salvaged files exported to forensic vault with cryptographically signed RECOVERY_MANIFEST_SHA256.txt (Operation ID: REC-2026-8819).",
       result: "success", status: "success",
@@ -72,7 +72,7 @@ function mockAuditLog(): AuditLogEntry[] {
     {
       id: "a5", timestamp: "2026-09-25T14:10:44.500Z", user_id: "supervisor.abhinay",
       case_id: MOCK_CASE, evidence_id: "E823_8FA6_BF53_0001_001B_448B_4A85_2466", action_type: "erase_execute",
-      description: "Supervisor authorization granted. NIST SP 800-88 Rev. 1 Cryptographic Erase (NVMe Format Sanitize) executed on target sectors (Operation ID: ERASE-2026-4421).",
+      description: "Supervisor authorization granted. NIST SP 800-88 Rev. 2 Cryptographic Erase (NVMe Format Sanitize) executed on target sectors (Operation ID: ERASE-2026-4421).",
       result: "success", status: "info",
     },
     {

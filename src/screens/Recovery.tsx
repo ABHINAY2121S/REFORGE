@@ -42,8 +42,8 @@ interface Candidate {
 }
 
 const recoveredFiles = [
-  { id: 1, name: 'Q3_Financial_Report_2024.xlsx', type: 'xlsx', size: '2.4 MB', confidence: 'high', checked: true, hash: 'sha256:a3f4c8d2e1b09...', path: '/RECYCLER/$R4H7PP2', multiCandidate: false },
-  { id: 2, name: 'Contract_MeridianCorp_v3.pdf', type: 'pdf', size: '890 KB', confidence: 'high', checked: true, hash: 'sha256:b7d1e5f3a2c09...', path: '/Documents/', multiCandidate: false },
+  { id: 1, name: 'Q3_Financial_Report_2024.xlsx', type: 'xlsx', size: '2.4 MB', confidence: 'high', checked: true, hash: 'sha256:a3f4c8d2e1b09...', path: '/RECYCLER/$R4H7PP2', isDeleted: true, multiCandidate: false },
+  { id: 2, name: 'Contract_MeridianCorp_v3.pdf', type: 'pdf', size: '890 KB', confidence: 'high', checked: true, hash: 'sha256:b7d1e5f3a2c09...', path: '/Documents/', isDeleted: false, multiCandidate: false },
   {
     id: 3, name: 'Unnamed (recovered by content)', type: 'jpg', size: '3.1 MB', confidence: 'medium', checked: false, hash: 'sha256:c9e2f4d1b3a08...', path: 'Unallocated cluster 0x1A4F', multiCandidate: true,
     candidates: [
@@ -51,7 +51,7 @@ const recoveredFiles = [
         id: 'cand-a', label: 'Candidate A', size: '3.1 MB', confidence: 89,
         reasoning: [
           { step: 'Header continuity', detail: 'JPEG SOI/APP0 markers intact, Exif block structurally valid' },
-          { step: 'Entropy match', detail: 'Fragment entropy 92% vs Fragment D 61% — significantly higher coherence' },
+          { step: 'Fragment coherence', detail: 'Coherence score 0.92 vs Fragment D 0.61 — significantly higher structural integrity' },
           { step: 'ML type consistency', detail: 'ResNet-50 content classifier: image/jpeg confidence 0.94' },
           { step: 'Spatial contiguity', detail: 'Cluster run is contiguous; no reallocation gaps detected' },
         ],
@@ -60,7 +60,7 @@ const recoveredFiles = [
         id: 'cand-b', label: 'Candidate B', size: '2.8 MB', confidence: 54,
         reasoning: [
           { step: 'Header continuity', detail: 'SOI marker present but APP1 Exif block has 3 corrupted bytes' },
-          { step: 'Entropy match', detail: 'Fragment entropy 61% — lower coherence suggests partial overwrite' },
+          { step: 'Fragment coherence', detail: 'Coherence score 0.61 — lower score suggests partial overwrite' },
           { step: 'ML type consistency', detail: 'ResNet-50 content classifier: image/jpeg confidence 0.61' },
           { step: 'Spatial contiguity', detail: 'Cluster run crosses a reallocated region (cluster 0x1C02–0x1C08)' },
         ],
@@ -69,18 +69,18 @@ const recoveredFiles = [
         id: 'cand-c', label: 'Candidate C', size: '3.0 MB', confidence: 31,
         reasoning: [
           { step: 'Header continuity', detail: 'SOI marker present; EOI marker missing — file likely truncated' },
-          { step: 'Entropy match', detail: 'Fragment entropy 44% — high likelihood of mixed content from another file' },
+          { step: 'Fragment coherence', detail: 'Coherence score 0.44 — high likelihood of mixed content from another file' },
           { step: 'ML type consistency', detail: 'ResNet-50 content classifier: image/jpeg confidence 0.29' },
           { step: 'Spatial contiguity', detail: 'Fragment spans 4 non-contiguous clusters' },
         ],
       },
     ] as Candidate[],
   },
-  { id: 4, name: 'email_export_nov_2024.pst', type: 'pst', size: '18.7 MB', confidence: 'high', checked: true, hash: 'sha256:d5f8a1c3e2b07...', path: '/AppData/Local/Microsoft', multiCandidate: false },
-  { id: 5, name: 'system_log_20241108.txt', type: 'txt', size: '156 KB', confidence: 'low', checked: false, hash: 'sha256:e1b4d6f2c3a06...', path: 'Unallocated cluster 0x3C21', multiCandidate: false },
-  { id: 6, name: 'backup_keys_encrypted.zip', type: 'zip', size: '44.2 KB', confidence: 'medium', checked: true, hash: 'sha256:f6c3b8d4e2a05...', path: '/RECYCLER/$RBKP91A', multiCandidate: false },
-  { id: 7, name: 'Unnamed (recovered by content)', type: 'mp4', size: '512 MB', confidence: 'medium', checked: false, hash: 'sha256:a2d7e9c1b4f04...', path: 'Unallocated cluster 0x7E88', multiCandidate: false },
-  { id: 8, name: 'HR_Investigation_Notes.docx', type: 'docx', size: '128 KB', confidence: 'high', checked: true, hash: 'sha256:b9f1a3d5c2e03...', path: '/OneDrive/Documents', multiCandidate: false },
+  { id: 4, name: 'email_export_nov_2024.pst', type: 'pst', size: '18.7 MB', confidence: 'high', checked: true, hash: 'sha256:d5f8a1c3e2b07...', path: '/AppData/Local/Microsoft', isDeleted: false, multiCandidate: false },
+  { id: 5, name: 'system_log_20241108.txt', type: 'txt', size: '156 KB', confidence: 'low', checked: false, hash: 'sha256:e1b4d6f2c3a06...', path: 'Unallocated cluster 0x3C21', isDeleted: false, multiCandidate: false },
+  { id: 6, name: 'backup_keys_encrypted.zip', type: 'zip', size: '44.2 KB', confidence: 'medium', checked: true, hash: 'sha256:f6c3b8d4e2a05...', path: '/RECYCLER/$RBKP91A', isDeleted: true, multiCandidate: false },
+  { id: 7, name: 'Unnamed (recovered by content)', type: 'mp4', size: '512 MB', confidence: 'medium', checked: false, hash: 'sha256:a2d7e9c1b4f04...', path: 'Unallocated cluster 0x7E88', isDeleted: false, multiCandidate: false },
+  { id: 8, name: 'HR_Investigation_Notes.docx', type: 'docx', size: '128 KB', confidence: 'high', checked: true, hash: 'sha256:b9f1a3d5c2e03...', path: '/OneDrive/Documents', isDeleted: false, multiCandidate: false },
 ];
 
 const confidenceConfig = {
@@ -814,13 +814,24 @@ export default function Recovery({ device, navigate, initialTargetPaths }: Recov
                       fontSize: 13, color: '#0F172A', fontWeight: 600, backgroundColor: '#FFFFFF', outline: 'none'
                     }}
                   >
-                    <option value="all">Comprehensive (Downloads, Documents, Desktop, Pictures, D:)</option>
-                    <option value="downloads">User Downloads Folder (Fast Carving)</option>
-                    <option value="documents">User Documents Folder</option>
-                    <option value="desktop">User Desktop Directory</option>
-                    <option value="temp">Windows Temp & Deleted Cache</option>
-                    <option value="d_drive">D: REFORGE Workspace / Data Drive</option>
-                    <option value="custom">Specific Directory / Folder Path...</option>
+                    {(device.type === 'USB' || device.type === 'SD') ? (
+                      <>
+                        <option value="all">Whole Device — Full Volume Carving</option>
+                        <option value="d_drive">{device.partitions?.[0]?.label ?? 'Removable Volume'} — FAT Cluster Scan</option>
+                        <option value="temp">Unallocated Clusters Only</option>
+                        <option value="custom">Specific Directory / Folder Path...</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="all">Comprehensive (Downloads, Documents, Desktop, Pictures, D:)</option>
+                        <option value="downloads">User Downloads Folder (Fast Carving)</option>
+                        <option value="documents">User Documents Folder</option>
+                        <option value="desktop">User Desktop Directory</option>
+                        <option value="temp">Windows Temp & Deleted Cache</option>
+                        <option value="d_drive">D: REFORGE Workspace / Data Drive</option>
+                        <option value="custom">Specific Directory / Folder Path...</option>
+                      </>
+                    )}
                   </select>
 
                   {scopeMode === 'custom' && (

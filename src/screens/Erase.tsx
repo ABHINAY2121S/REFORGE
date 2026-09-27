@@ -811,7 +811,13 @@ export default function Erase({ device, navigate }: EraseProps) {
 
             {/* Certificate */}
             <button
-              onClick={() => navigate('reports')}
+              onClick={() => {
+                // #28: tell ReportsAndCertificates to open the sanitization tab, not the default forensic tab
+                window.dispatchEvent(new CustomEvent('reforge:view_document', {
+                  detail: { docType: 'sanitization', caseId: device?.serial ? undefined : undefined }
+                }));
+                navigate('reports');
+              }}
               style={{
                 width: '100%', padding: '12px', borderRadius: 8,
                 border: '1.5px solid #1E8F7A', backgroundColor: '#E8F5F2', color: '#1E8F7A',
