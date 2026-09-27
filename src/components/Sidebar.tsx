@@ -24,7 +24,7 @@ const roleColors: Record<UserRole, string> = {
 };
 
 export default function Sidebar({ currentScreen, navigate, userRole, userName }: SidebarProps) {
-  const activeScreen = ['operation-choice', 'file-scope', 'recovery', 'erase'].includes(currentScreen)
+  const activeScreen = ['operation-choice', 'file-scope'].includes(currentScreen)
     ? 'devices'
     : currentScreen;
 
