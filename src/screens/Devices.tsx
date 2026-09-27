@@ -30,6 +30,23 @@ const fallbackDevices: Device[] = [
     isSystemDrive: true,
     firmwareStatus: 'verified',
   },
+  {
+    id: 'dev-1',
+    name: 'SanDisk Ultra USB 3.2 Gen 1',
+    type: 'USB',
+    capacity: '59.63 GB',
+    capacityBytes: 64023257088,
+    interface: 'USB 3.2',
+    model: 'SanDisk Ultra USB 3.2 Gen 1',
+    serial: 'AA01_4C3D_9B17_0000',
+    partitions: [
+      { label: 'E: (Removable)', size: '59.63 GB', fs: 'FAT32' },
+    ],
+    encrypted: false,
+    hiddenArea: false,
+    isSystemDrive: false,
+    firmwareStatus: 'verified',
+  },
 ];
 
 const deviceTypeIcon = (type: Device['type']) => {
@@ -43,18 +60,21 @@ const deviceTypeIcon = (type: Device['type']) => {
 const firmwareBadgeConfig = {
   verified: {
     label: 'Firmware: Verified Reliable',
+    tooltip: 'Matched against Reforge firmware reliability list v1',
     bg: '#EDFAF3',
     color: '#2E9E5B',
     Icon: IconShieldCheck,
   },
   unverified: {
     label: 'Firmware: Unverified',
+    tooltip: 'Not yet matched against Reforge firmware reliability list v1',
     bg: '#FEF8EC',
     color: '#B8862E',
     Icon: IconInfo,
   },
   unreliable: {
     label: 'Firmware: Known Unreliable',
+    tooltip: 'Flagged in Reforge firmware reliability list v1 — sanitize commands may not fully clear data',
     bg: '#FEF2F3',
     color: '#C6394A',
     Icon: IconAlertTriangle,
@@ -158,10 +178,11 @@ function DeviceCard({ device, isSelected, onSelect }: DeviceCardProps) {
               {/* USP 3a: Firmware badge */}
               {fwCfg && (
                 <span
+                  title={fwCfg.tooltip}
                   style={{
                     fontSize: 11, padding: '3px 8px', borderRadius: 4, fontWeight: 600,
                     backgroundColor: fwCfg.bg, color: fwCfg.color, border: `1px solid ${fwCfg.color}40`,
-                    display: 'flex', alignItems: 'center', gap: 4,
+                    display: 'flex', alignItems: 'center', gap: 4, cursor: 'help',
                   }}
                 >
                   <fwCfg.Icon size={11} style={{ stroke: fwCfg.color }} />

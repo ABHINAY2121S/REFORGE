@@ -7,9 +7,9 @@ interface VerificationProps {
 }
 
 const operations = [
-  { id: 'OP-2024-1182', device: 'Seagate Barracuda 2TB', type: 'erase', status: 'pass', entropy_before: 2.14, entropy_after: 7.998, signatures_before: 12840, signatures_after: 0, method: 'DoD 5220.22-M', timestamp: '2024-11-08 09:14:22' },
-  { id: 'OP-2024-1181', device: 'WD Black NVMe 1TB', type: 'erase', status: 'pass', entropy_before: 3.07, entropy_after: 7.991, signatures_before: 8320, signatures_after: 0, method: 'NVMe Sanitize', timestamp: '2024-09-11 11:05:17' },
-  { id: 'OP-2024-1177', device: 'SanDisk Ultra USB 3.2', type: 'erase', status: 'partial', entropy_before: 1.88, entropy_after: 7.201, signatures_before: 3210, signatures_after: 14, method: 'Multi-pass Overwrite', timestamp: '2024-09-10 16:30:00' },
+  { id: 'ERASE-2026-0017', device: 'WD PC SN810 SDCPNRY-512G-1006', type: 'erase', status: 'pass', entropy_before: 2.14, entropy_after: 7.998, signatures_before: 12840, signatures_after: 0, method: 'NIST Purge: Crypto Erase', timestamp: '2026-09-25 09:14:22' },
+  { id: 'ERASE-2026-0887', device: 'SanDisk Ultra USB 3.2 Gen 1', type: 'erase', status: 'pass', entropy_before: 1.88, entropy_after: 0.021, signatures_before: 3210, signatures_after: 0, method: 'NIST Clear: Overwrite', timestamp: '2026-09-11 11:05:17' },
+  { id: 'ERASE-2026-0884', device: 'Kingston microSD 128GB', type: 'erase', status: 'partial', entropy_before: 3.07, entropy_after: 7.201, signatures_before: 8320, signatures_after: 14, method: 'NIST Clear: Overwrite', timestamp: '2026-09-10 16:30:00' },
 ];
 
 const entropyColor = (val: number) => {

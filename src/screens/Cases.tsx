@@ -471,7 +471,7 @@ export default function Cases({ navigate, userRole }: CasesProps) {
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ color: '#1E8F7A', fontSize: 13, fontWeight: 700 }}>✓</span>
-                            <span style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>§65B(4) Certificate</span>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>BSA §63 Certificate</span>
                           </div>
                           <div style={{ fontSize: 11, color: '#647184', marginTop: 2 }}>
                             BSA 2023 court-admissible certificate

@@ -143,7 +143,7 @@ export default function ReportsAndCertificates({
       },
       recoveryDetails: recoveryOp,
       erasureDetails: eraseOp,
-      standardCompliance: 'NIST SP 800-88 Rev. 2 · IEEE 2883-2022 · ISO/IEC 27037 · RFC 3161',
+      standardCompliance: 'NIST SP 800-88 Rev. 2 · IEEE 2883-2022 · ISO/IEC 27037',
       sha256Seal,
       generatedAt: new Date().toISOString(),
     };
@@ -181,7 +181,7 @@ export default function ReportsAndCertificates({
     },
     {
       id: 'section65b',
-      label: '§65B(4) Evidence Certificate',
+      label: 'BSA §63 Evidence Certificate',
       isAvailable: isSection65bAvailable,
       unavailableReason: `Not available — no completed forensic recovery exists for Case #${selectedCaseId}.`,
       kind: 'Certificate',
@@ -226,11 +226,11 @@ export default function ReportsAndCertificates({
               borderRadius: 6, backgroundColor: '#EDFAF3', color: '#2E9E5B', fontSize: 12, fontWeight: 600
             }}>
               <IconShieldCheck size={14} style={{ color: '#2E9E5B' }} />
-              IMMUTABLE & NON-EDITABLE
+              TAMPER-EVIDENT &amp; NON-EDITABLE
             </span>
           </div>
           <p style={{ fontSize: 13, color: '#647184', marginTop: 4 }}>
-            Official forensic documentation with SHA-256 cryptographic ledger seal for court admissibility.
+            Official forensic documentation with SHA-256 cryptographic ledger seal, prepared for legal review.
           </p>
         </div>
 
@@ -406,19 +406,19 @@ export default function ReportsAndCertificates({
                 />
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.12em', color: '#1E8F7A', textTransform: 'uppercase' }}>
-                    REFORGE DIGITAL FORENSICS AUTHORITY
+                    REFORGE FORENSIC REPORT
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: '#1A2330', letterSpacing: '-0.02em', marginTop: 2 }}>
                     {activeDoc === 'sanitization' && 'CERTIFICATE OF MEDIA SANITIZATION'}
                     {activeDoc === 'erasure' && 'MEDIA ERASURE TECHNICAL REPORT'}
-                    {activeDoc === 'section65b' && 'CERTIFICATE UNDER SECTION 65B(4) / BSA 2023'}
+                    {activeDoc === 'section65b' && 'BSA §63 EVIDENCE CERTIFICATE (formerly §65B(4) IEA)'}
                     {activeDoc === 'forensic' && 'FORENSIC RECOVERY TECHNICAL REPORT'}
                     {activeDoc === 'custody' && 'CHAIN OF CUSTODY CERTIFICATE & LEDGER'}
                   </div>
                 </div>
               </div>
               <div style={{ fontSize: 12, color: '#647184', marginTop: 8 }}>
-                Standard Compliance: NIST SP 800-88 Rev. 2 · IEEE 2883-2022 · ISO/IEC 27037 · RFC 3161 Trusted Timestamps
+                Standard Compliance: NIST SP 800-88 Rev. 2 · IEEE 2883-2022 · ISO/IEC 27037
               </div>
             </div>
 
@@ -578,7 +578,7 @@ export default function ReportsAndCertificates({
             {activeDoc === 'section65b' && (
               <div style={{ marginBottom: 28 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1A2330', borderBottom: '1px solid #E2E8F0', paddingBottom: 8, marginBottom: 12 }}>
-                  2. ATTESTATION PURSUANT TO SECTION 65B(4) OF THE INDIAN EVIDENCE ACT / BSA 2023
+                  2. ATTESTATION PURSUANT TO BSA §63 (BHARATIYA SAKSHYA ADHINIYAM, 2023) / FORMERLY IEA §65B(4)
                 </h3>
                 <div style={{
                   padding: '18px 20px', backgroundColor: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0',
@@ -595,7 +595,7 @@ export default function ReportsAndCertificates({
                       All data recovery operations were executed by certified software operating properly without human interception or unauthorized alteration.
                     </li>
                     <li>
-                      The SHA-256 cryptographic image hashes match bit-for-bit with the physical source media, ensuring legal admissibility under Section 65B(4) of the Indian Evidence Act, 1872 and Section 63 of Bharatiya Sakshya Adhiniyam, 2023.
+                      The SHA-256 cryptographic image hashes match bit-for-bit with the physical source media, prepared for legal review pursuant to BSA §63 of Bharatiya Sakshya Adhiniyam, 2023 (replacing §65B(4) of the Indian Evidence Act, 1872 with effect from 01 July 2024).
                     </li>
                   </ol>
                 </div>
@@ -701,7 +701,7 @@ export default function ReportsAndCertificates({
             }}>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#647184', textTransform: 'uppercase', marginBottom: 6 }}>
-                  IMMUTABLE SHA-256 DIGITAL EVIDENCE SEAL
+                  TAMPER-EVIDENT SHA-256 DIGITAL EVIDENCE SEAL
                 </div>
                 <div style={{
                   padding: '10px 14px', backgroundColor: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0',

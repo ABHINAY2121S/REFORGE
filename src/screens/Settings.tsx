@@ -46,7 +46,7 @@ const complianceStandards = [
   { id: 'dpdp-act', label: 'DPDP Act (India)', description: 'Digital Personal Data Protection Act 2023', enabled: true },
   { id: 'dod-5220', label: 'DoD 5220.22-M', description: 'National Industrial Security Program', enabled: false },
   { id: 'gdpr', label: 'GDPR Article 17', description: 'Right to Erasure obligations', enabled: false },
-  { id: 'it-act-65b', label: 'IT Act §65B(4)', description: 'Indian IT Act evidence admissibility', enabled: true },
+  { id: 'it-act-65b', label: 'BSA §63 / IEA §65B(4)', description: 'Bharatiya Sakshya Adhiniyam 2023 §63 (replaces IEA §65B(4) from 01 Jul 2024)', enabled: true },
 ];
 
 export default function Settings({ navigate, userRole }: SettingsProps) {

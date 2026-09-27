@@ -351,7 +351,7 @@ const SEED_CUSTODY: CustodyRecord[] = [
     fromPerson: 'Examiner A. Patel',
     toPerson: 'Examiner A. Patel',
     location: 'Forensics Workstation-PATEL',
-    reason: 'Write-block bridge engaged to preserve integrity for court admissibility',
+    reason: 'Software read-only mode engaged to preserve forensic integrity of evidence media',
     timestamp: '2026-09-08 14:30:00 UTC',
   },
   {

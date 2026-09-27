@@ -165,7 +165,7 @@ body {
 .app-main {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-8) 36px;
+  padding: var(--space-8) 36px 96px; /* 96px bottom clears the fixed ForensicAssistant FAB */
   min-width: 0;
   background-color: var(--bg-base);
 }

@@ -14,26 +14,25 @@ interface DashboardProps {
 }
 
 const operations = [
-  { id: 1, type: 'recovery', device: 'Seagate Barracuda 2TB (SDA)', status: 'verified', time: '09:14, Today', caseId: '2024-CF-0892' },
-  { id: 2, type: 'erase', device: 'Samsung 870 EVO SSD (SDB)', status: 'in-progress', time: '08:47, Today', caseId: '2024-CF-0892' },
-  { id: 3, type: 'recovery', device: 'SanDisk Ultra USB 3.2', status: 'needs-review', time: '11 Sep, 14:22', caseId: '2024-CF-0887' },
-  { id: 4, type: 'erase', device: 'WD Black NVMe 1TB (NVMe0)', status: 'verified', time: '11 Sep, 11:05', caseId: '2024-CF-0887' },
-  { id: 5, type: 'recovery', device: 'Kingston microSD 128GB', status: 'failed', time: '10 Sep, 16:30', caseId: '2024-CF-0884' },
+  { id: 1, type: 'recovery', device: 'WD PC SN810 SDCPNRY-512G-1006', status: 'verified', time: '09:14, Today', caseId: '2024-CF-0892' },
+  { id: 2, type: 'erase', device: 'WD PC SN810 SDCPNRY-512G-1006', status: 'in-progress', time: '08:47, Today', caseId: '2024-CF-0892' },
+  { id: 3, type: 'recovery', device: 'SanDisk Ultra USB 3.2 Gen 1', status: 'needs-review', time: '11 Sep 2026, 14:22', caseId: '2024-CF-0887' },
+  { id: 4, type: 'erase', device: 'SanDisk Ultra USB 3.2 Gen 1', status: 'verified', time: '11 Sep 2026, 11:05', caseId: '2024-CF-0887' },
+  { id: 5, type: 'recovery', device: 'Kingston microSD 128GB', status: 'failed', time: '10 Sep 2026, 16:30', caseId: '2024-CF-0884' },
 ];
 
 const pendingReviews = [
-  { id: 1, type: 'erase', device: 'Samsung 870 EVO SSD (SDB)', investigator: 'S. Mehta', time: '10:42, Today', caseId: '2024-CF-0892' },
-  { id: 2, type: 'recovery', device: 'SanDisk Ultra USB 3.2', investigator: 'R. Kumar', time: '11 Sep, 14:22', caseId: '2024-CF-0887' },
+  { id: 1, type: 'recovery', device: 'SanDisk Ultra USB 3.2 Gen 1', investigator: 'A. Patel', time: '11 Sep 2026, 14:22', caseId: '2024-CF-0887' },
 ];
 
 const auditFeed = [
-  { time: '09:14:22', user: 'S. Mehta', event: 'Recovery operation verified — Case #2024-CF-0892', type: 'success' },
-  { time: '08:47:01', user: 'S. Mehta', event: 'Erase initiated — Samsung 870 EVO SSD', type: 'warning' },
-  { time: '08:44:15', user: 'System', event: 'Device connected — Samsung 870 EVO SSD (SDB)', type: 'info' },
+  { time: '09:14:22', user: 'A. Patel', event: 'Recovery operation verified — WD PC SN810 (Case #2024-CF-0892)', type: 'success' },
+  { time: '08:47:01', user: 'A. Patel', event: 'Erase initiated — WD PC SN810 SDCPNRY-512G-1006', type: 'warning' },
+  { time: '08:44:15', user: 'System', event: 'Device connected — WD PC SN810 SDCPNRY-512G-1006 (NVMe)', type: 'info' },
   { time: '08:30:00', user: 'A. Patel', event: 'Case #2024-CF-0892 opened', type: 'info' },
-  { time: '11 Sep 23:58', user: 'System', event: 'Daily audit log sealed — chain intact', type: 'success' },
-  { time: '11 Sep 14:22', user: 'R. Kumar', event: 'Recovery scan started — SanDisk Ultra', type: 'info' },
-  { time: '11 Sep 11:05', user: 'R. Kumar', event: 'Erasure certificate generated — WD Black NVMe', type: 'success' },
+  { time: '11 Sep 2026 23:58', user: 'System', event: 'Daily audit log sealed — chain intact', type: 'success' },
+  { time: '11 Sep 2026 14:22', user: 'A. Patel', event: 'Recovery scan started — SanDisk Ultra USB 3.2 Gen 1', type: 'info' },
+  { time: '11 Sep 2026 11:05', user: 'A. Patel', event: 'Erasure certificate generated — SanDisk Ultra USB 3.2 Gen 1', type: 'success' },
 ];
 
 const statusConfig = {

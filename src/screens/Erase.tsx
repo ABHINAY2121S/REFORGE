@@ -145,19 +145,29 @@ function Toggle({ value, onChange, label, description }: ToggleProps) {
   );
 }
 
+// NIST SP 800-88 Rev. 2 primary methods (IEEE 2883-2022)
 const eraseMethods = [
-  { id: 'nvme-sanitize', label: 'NVMe Sanitize (Crypto Erase)', description: 'Recommended for self-encrypting SSDs. Discards the drive\'s internal encryption key, rendering all data unrecoverable instantly.' },
-  { id: 'dod-7pass', label: 'DoD 5220.22-M (7-pass overwrite)', description: 'Seven-pass overwrite pattern per DoD specification. Best for HDDs. Time-intensive but thorough.' },
-  { id: 'gutmann-35pass', label: 'Gutmann (35-pass overwrite)', description: 'Thirty-five-pass overwrite. Extremely thorough for older magnetic media.' },
-  { id: 'nist-purge', label: 'NIST 800-88 Rev.2 Purge', description: 'NIST-approved purge method. Appropriate for most flash-based and magnetic media under compliance requirements.' },
-  { id: 'crypto-erase', label: 'Crypto Erase', description: 'Destroys the encryption key, making encrypted data mathematically unrecoverable. Fastest method for self-encrypting drives.' },
+  { id: 'nist-clear', label: 'NIST Clear: Overwrite', description: 'Single-pass overwrite of all user-addressable space. For HDDs and USB/SD flash media. NIST SP 800-88 Rev. 2 compliant.', nistLevel: 'NIST Clear' },
+  { id: 'nist-purge-block', label: 'NIST Purge: Block Erase (Sanitize)', description: "Drive's built-in Sanitize Block Erase command. For SATA/NVMe SSDs that support it. NIST SP 800-88 Rev. 2 — Purge.", nistLevel: 'NIST Purge' },
+  { id: 'nist-purge-crypto', label: 'NIST Purge: Crypto Erase', description: 'Destroys the drive\'s internal encryption key. For self-encrypting drives (SED). Renders all data mathematically unrecoverable. NIST SP 800-88 Rev. 2 — Purge.', nistLevel: 'NIST Purge' },
+  { id: 'nist-destroy', label: 'NIST Destroy', description: 'Physical destruction recommended when software purge is not possible (e.g., unsupported firmware). Requires documented destruction log.', nistLevel: 'NIST Destroy' },
+  // Legacy methods — retained for organizational compliance requirements
+  { id: 'dod-7pass', label: 'DoD 5220.22-M (7-pass overwrite)', description: 'Legacy: Seven-pass overwrite per DoD specification. Superseded by NIST SP 800-88 for modern media. Retained for organizations with legacy compliance mandates.', nistLevel: 'Legacy' },
+  { id: 'gutmann-35pass', label: 'Gutmann (35-pass overwrite)', description: 'Legacy: Thirty-five-pass overwrite designed for older magnetic media. Superseded by NIST SP 800-88 Rev. 2. Retained for specialized archival and legacy compliance workflows.', nistLevel: 'Legacy' },
 ];
 
 export default function Erase({ device, navigate }: EraseProps) {
   const [step, setStep] = useState<Step>('configure');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [dryRun, setDryRun] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState('nvme-sanitize');
+  // #2: Default method based on device type — NVMe SED → crypto erase; USB/SD → overwrite; HDD → NIST Clear
+  const getDefaultMethod = (dev?: Device) => {
+    if (!dev) return 'nist-clear';
+    if (dev.interface === 'NVMe') return 'nist-purge-crypto';
+    if (dev.type === 'USB' || dev.type === 'SD') return 'nist-clear';
+    return 'nist-clear';
+  };
+  const [selectedMethod, setSelectedMethod] = useState(() => getDefaultMethod(device));
   const [serialInput, setSerialInput] = useState('');
   const [progress, setProgress] = useState(0);
   const [phaseLabel, setPhaseLabel] = useState('Erasing');
@@ -396,12 +406,14 @@ export default function Erase({ device, navigate }: EraseProps) {
               </div>
             </div>
             <div style={{ fontSize: 15, fontWeight: 600, color: '#1A2330', marginBottom: 6 }}>
-              {isNvme ? 'NVMe Sanitize (Crypto Erase)' : 'NIST 800-88 Rev.2 Purge'}
+              {isNvme ? 'NIST Purge: Crypto Erase' : (device?.type === 'USB' || device?.type === 'SD') ? 'NIST Clear: Overwrite' : 'NIST Clear: Overwrite'}
             </div>
             <div style={{ fontSize: 13, color: '#647184', lineHeight: 1.6 }}>
               {isNvme
-                ? 'Because this drive is a self-encrypting NVMe SSD, Crypto Erase discards the internal key and renders all data instantly unrecoverable — NIST 800-88 compliant.'
-                : 'NIST-approved purge method for HDDs and other magnetic media. Appropriate for compliance requirements under NIST 800-88 Rev.2.'}
+                ? 'This drive is an NVMe SSD. Crypto Erase destroys the internal encryption key, rendering all data instantly unrecoverable — NIST SP 800-88 Rev. 2 Purge compliant.'
+                : (device?.type === 'USB' || device?.type === 'SD')
+                  ? 'Single-pass overwrite of all user-addressable space on this flash storage device. NIST SP 800-88 Rev. 2 Clear method. Appropriate for USB/SD flash media.'
+                  : 'Single-pass overwrite of all user-addressable space. NIST SP 800-88 Rev. 2 Clear method. Appropriate for HDDs and removable magnetic media.'}
             </div>
           </div>
 
@@ -451,33 +463,44 @@ export default function Erase({ device, navigate }: EraseProps) {
             {advancedOpen && (
               <div style={{ borderTop: '1px solid #DDE3EA', padding: '16px 20px' }}>
                 <div style={{ fontSize: 12, color: '#647184', marginBottom: 12 }}>
-                  Override the recommended method. Choose carefully — some methods are not appropriate for all media types.
+                  Override the recommended method. NIST SP 800-88 Rev. 2 methods are listed first. Legacy methods (DoD/Gutmann) are retained for organizational compliance requirements — they have been superseded by NIST for modern media.
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {eraseMethods.map((method) => (
-                    <label
-                      key={method.id}
-                      style={{
-                        display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 8,
-                        border: `1.5px solid ${selectedMethod === method.id ? '#1E8F7A' : '#DDE3EA'}`,
-                        backgroundColor: selectedMethod === method.id ? '#F8FDFC' : '#FFFFFF',
-                        cursor: 'pointer', transition: 'all 0.1s ease',
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="eraseMethod"
-                        value={method.id}
-                        checked={selectedMethod === method.id}
-                        onChange={() => setSelectedMethod(method.id)}
-                        style={{ flexShrink: 0, marginTop: 2, accentColor: '#1E8F7A' }}
-                      />
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 500, color: '#1A2330' }}>{method.label}</div>
-                        <div style={{ fontSize: 12, color: '#647184', marginTop: 3, lineHeight: 1.5 }}>{method.description}</div>
-                      </div>
-                    </label>
-                  ))}
+                  {eraseMethods.map((method) => {
+                    const isLegacy = method.nistLevel === 'Legacy';
+                    return (
+                      <label
+                        key={method.id}
+                        style={{
+                          display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 8,
+                          border: `1.5px solid ${selectedMethod === method.id ? '#1E8F7A' : isLegacy ? '#F0D890' : '#DDE3EA'}`,
+                          backgroundColor: selectedMethod === method.id ? '#F8FDFC' : isLegacy ? '#FFFDF5' : '#FFFFFF',
+                          cursor: 'pointer', transition: 'all 0.1s ease',
+                        }}
+                      >
+                        <input
+                          type="radio"
+                          name="eraseMethod"
+                          value={method.id}
+                          checked={selectedMethod === method.id}
+                          onChange={() => setSelectedMethod(method.id)}
+                          style={{ flexShrink: 0, marginTop: 2, accentColor: '#1E8F7A' }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 13, fontWeight: 500, color: '#1A2330' }}>{method.label}</span>
+                            {isLegacy && (
+                              <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 3, backgroundColor: '#FEF8EC', color: '#B8862E', border: '1px solid #F0D890' }}>LEGACY</span>
+                            )}
+                            {!isLegacy && (
+                              <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 3, backgroundColor: '#EDFAF3', color: '#2E9E5B', border: '1px solid #A8E6C3' }}>{method.nistLevel}</span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: 12, color: '#647184', marginTop: 3, lineHeight: 1.5 }}>{method.description}</div>
+                        </div>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -706,7 +729,9 @@ export default function Erase({ device, navigate }: EraseProps) {
                 <span style={{ fontSize: 11, color: '#4C5FC7' }}>8.00 (maximum entropy)</span>
               </div>
               <div style={{ fontSize: 12, color: '#647184', marginTop: 8, lineHeight: 1.5 }}>
-                Entropy measures how random the written data appears. A value at or near 8.00 bits/byte indicates the original data is no longer distinguishable.
+                {selectedMethod === 'nist-clear' || selectedMethod === 'dod-7pass' || selectedMethod === 'gutmann-35pass'
+                  ? 'For overwrite methods, post-wipe entropy near 0.00 is expected — the drive is filled with a defined pattern (not random data). The adversarial recovery scan is the primary verification.'
+                  : 'For crypto erase methods, post-wipe entropy near 8.00 bits/byte is expected — residual ciphertext appears fully random. The adversarial scan confirms no key remnants remain.'}
               </div>
             </div>
           </div>

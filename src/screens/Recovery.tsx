@@ -712,13 +712,30 @@ export default function Recovery({ device, navigate, initialTargetPaths }: Recov
               <span style={{ color: '#475569', fontWeight: 600 }}>Serial Number</span>
               <span style={{ fontFamily: 'JetBrains Mono, monospace', color: '#0F172A', fontWeight: 600 }}>{device.serial}</span>
               <span style={{ color: '#475569', fontWeight: 600 }}>Media Type</span>
-              <span style={{ color: '#0F172A', fontWeight: 600 }}>{(device as any).mediaTechnology || (device.type === 'SSD' ? 'NVMe / SATA Solid State (NAND Flash)' : 'Magnetic Platter HDD')}</span>
+              <span style={{ color: '#0F172A', fontWeight: 600 }}>
+                {(device as any).mediaTechnology ||
+                  (device.type === 'USB' ? 'USB Flash Storage (NAND Flash)'
+                  : device.type === 'SD' ? 'SD Flash Storage (NAND Flash)'
+                  : device.type === 'SSD' ? 'Solid State Drive (NAND Flash)'
+                  : 'Magnetic Platter HDD')}
+              </span>
               <span style={{ color: '#475569', fontWeight: 600 }}>TRIM Architecture</span>
-              <span style={{ color: (device as any).trimSupported ? '#D97706' : '#16A34A', fontWeight: 600 }}>{(device as any).trimStatus || (device.type === 'SSD' ? 'Hardware TRIM Active (Emptied sectors cleared; recovered via journal & residuals)' : 'TRIM Inactive (100% Raw Physical Cluster Carving Supported)')}</span>
+              <span style={{ color: (device as any).trimSupported ? '#D97706' : '#16A34A', fontWeight: 600 }}>
+                {(device as any).trimStatus ||
+                  (device.type === 'USB' || device.type === 'SD'
+                    ? 'TRIM: Not applicable (USB/SD mass storage)'
+                    : device.type === 'SSD'
+                      ? 'Hardware TRIM Active (Emptied sectors cleared; recovered via journal & residuals)'
+                      : 'TRIM Inactive (100% Raw Physical Cluster Carving Supported)')}
+              </span>
               <span style={{ color: '#475569', fontWeight: 600 }}>Access Mode</span>
-              <span style={{ color: '#16A34A', fontWeight: 700 }}>Forensic Read-Only (Hardware & Software Write-Blocked)</span>
+              <span style={{ color: '#16A34A', fontWeight: 700 }}>Forensic Read-Only (Software Write-Protected — Hardware write-blocker recommended for evidence drives)</span>
               <span style={{ color: '#475569', fontWeight: 600 }}>Carving Strategy</span>
-              <span style={{ color: '#0F172A', fontWeight: 600 }}>Header/Trailer Signatures + $Recycle.Bin Residuals + Shell Journal + MFT</span>
+              <span style={{ color: '#0F172A', fontWeight: 600 }}>
+                {device.type === 'USB' || device.type === 'SD'
+                  ? 'FAT Directory Entry Recovery + File Signature/Header Carving + Unallocated Cluster Scan'
+                  : 'Header/Trailer Signatures + $Recycle.Bin Residuals + Shell Journal + MFT'}
+              </span>
               <span style={{ color: '#475569', fontWeight: 600 }}>Target Partitions</span>
               <span style={{ color: '#0F172A', fontWeight: 600 }}>{device.partitions?.map(p => p.label).join(', ') || 'Whole Physical Device'}</span>
             </div>
