@@ -319,7 +319,8 @@ function CompareCandidatesPanel({
             {candidates.map((cand) => {
               const isSelected = cand.id === selectedId;
               const isOpen = expandedReasoning === cand.id;
-              const cc = confidenceColor(cand.confidence);
+              const confPercent = cand.confidence <= 1 ? Math.round(cand.confidence * 100) : Math.round(cand.confidence);
+              const cc = confidenceColor(confPercent);
               return (
                 <div
                   key={cand.id}
@@ -356,13 +357,13 @@ function CompareCandidatesPanel({
                     <div style={{ marginBottom: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                         <span style={{ fontSize: 11, color: '#647184' }}>Confidence</span>
-                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 500, color: cc }}>{cand.confidence}%</span>
+                        <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, fontWeight: 500, color: cc }}>{confPercent}%</span>
                       </div>
                       <div style={{ height: 6, borderRadius: 3, backgroundColor: '#F0F3F6', overflow: 'hidden' }}>
                         <div
                           key={`cand-${cand.id}`}
                           className="bar-animated"
-                          style={{ height: '100%', width: `${cand.confidence}%`, borderRadius: 3, backgroundColor: cc }}
+                          style={{ height: '100%', width: `${confPercent}%`, borderRadius: 3, backgroundColor: cc }}
                         />
                       </div>
                     </div>
@@ -1189,7 +1190,7 @@ export default function Recovery({ device, navigate, initialTargetPaths }: Recov
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 8, backgroundColor: conf.bg, color: conf.color, border: `1px solid ${conf.color}40`, fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: conf.color }} />
-                      {hasMultiple && chosenCand ? `${chosenCand.confidence}%` : conf.label}
+                      {hasMultiple && chosenCand ? `${chosenCand.confidence <= 1 ? Math.round(chosenCand.confidence * 100) : Math.round(chosenCand.confidence)}%` : conf.label}
                     </div>
                     {!hasMultiple && <IconChevronRight size={14} style={{ color: '#94A3B8', stroke: '#94A3B8', flexShrink: 0 }} />}
                   </div>
