@@ -3,7 +3,7 @@ import { Device, Screen } from '../types';
 import { recordEraseCompleted } from '../operationsStore';
 import {
   IconShieldLock, IconShieldCheck, IconCheck, IconAlertTriangle,
-  IconInfo, IconChevronDown, IconChevronUp, IconArrowRight, IconActivity, IconCertificate, IconRefresh, IconHardDrive
+  IconInfo, IconChevronDown, IconChevronUp, IconArrowRight, IconActivity, IconCertificate, IconRefresh, IconHardDrive, IconX
 } from '../components/Icons';
 
 interface EraseProps {
@@ -146,27 +146,288 @@ function Toggle({ value, onChange, label, description }: ToggleProps) {
 }
 
 // NIST SP 800-88 Rev. 2 primary methods (IEEE 2883-2022)
-const eraseMethods = [
-  { id: 'nist-clear', label: 'NIST Clear: Overwrite', description: 'Single-pass overwrite of all user-addressable space. For HDDs and USB/SD flash media. NIST SP 800-88 Rev. 2 compliant.', nistLevel: 'NIST Clear' },
-  { id: 'nist-purge-block', label: 'NIST Purge: Block Erase (Sanitize)', description: "Drive's built-in Sanitize Block Erase command. For SATA/NVMe SSDs that support it. NIST SP 800-88 Rev. 2 — Purge.", nistLevel: 'NIST Purge' },
-  { id: 'nist-purge-crypto', label: 'NIST Purge: Crypto Erase', description: 'Destroys the drive\'s internal encryption key. For self-encrypting drives (SED). Renders all data mathematically unrecoverable. NIST SP 800-88 Rev. 2 — Purge.', nistLevel: 'NIST Purge' },
-  { id: 'nist-destroy', label: 'NIST Destroy', description: 'Physical destruction recommended when software purge is not possible (e.g., unsupported firmware). Requires documented destruction log.', nistLevel: 'NIST Destroy' },
-  // Legacy methods — retained for organizational compliance requirements
-  { id: 'dod-7pass', label: 'DoD 5220.22-M (7-pass overwrite)', description: 'Legacy: Seven-pass overwrite per DoD specification. Superseded by NIST SP 800-88 for modern media. Retained for organizations with legacy compliance mandates.', nistLevel: 'Legacy' },
-  { id: 'gutmann-35pass', label: 'Gutmann (35-pass overwrite)', description: 'Legacy: Thirty-five-pass overwrite designed for older magnetic media. Superseded by NIST SP 800-88 Rev. 2. Retained for specialized archival and legacy compliance workflows.', nistLevel: 'Legacy' },
+export interface EraseMethod {
+  id: string;
+  label: string;
+  badge: string;
+  description: string;
+  nistLevel: 'NIST Clear' | 'NIST Purge' | 'NIST Destroy' | 'Legacy';
+}
+
+const nistMethods: EraseMethod[] = [
+  {
+    id: 'nist-clear',
+    label: 'NIST Clear: Overwrite',
+    badge: 'NIST Clear',
+    description: 'Single-pass overwrite of all user-accessible storage. Suitable for HDDs and USB/SD flash media. NIST SP 800-88 Rev. 2 Clear, per IEEE 2883.',
+    nistLevel: 'NIST Clear',
+  },
+  {
+    id: 'nist-purge-block',
+    label: 'NIST Purge: Sanitize Block Erase',
+    badge: 'NIST Purge',
+    description: "Uses the drive's built-in Sanitize command to erase every block, including hidden spare areas. For SATA and NVMe SSDs that support it. NIST SP 800-88 Rev. 2 Purge.",
+    nistLevel: 'NIST Purge',
+  },
+  {
+    id: 'nist-purge-crypto',
+    label: 'NIST Purge: Crypto Erase',
+    badge: 'NIST Purge',
+    description: "Destroys the drive's internal encryption key, making all stored data cryptographically inaccessible. Only valid for self-encrypting drives (SEDs) where encryption was always enabled. NIST SP 800-88 Rev. 2 Purge.",
+    nistLevel: 'NIST Purge',
+  },
+  {
+    id: 'nist-destroy',
+    label: 'NIST Destroy: Physical Destruction',
+    badge: 'NIST Destroy',
+    description: 'Physical destruction by shredding, disintegration, or incineration. Required when software Purge is not possible and the data is highly sensitive. Reforge records the destruction and issues a certificate.',
+    nistLevel: 'NIST Destroy',
+  },
 ];
+
+const legacyMethods: EraseMethod[] = [
+  {
+    id: 'dod-3pass',
+    label: 'DoD 5220.22-M (3-pass overwrite)',
+    badge: 'LEGACY',
+    description: 'Three passes: zeros, then ones, then random data. Replaced by NIST SP 800-88 for modern media. Offers no extra security over a single pass on flash drives and adds wear. Kept for legacy policy requirements only.',
+    nistLevel: 'Legacy',
+  },
+  {
+    id: 'gutmann-35pass',
+    label: 'Gutmann (35-pass overwrite)',
+    badge: 'LEGACY',
+    description: 'Designed in 1996 for old magnetic drive encoding schemes. Not meaningful for modern HDDs or flash media. Kept for legacy policy requirements only.',
+    nistLevel: 'Legacy',
+  },
+];
+
+const eraseMethods: EraseMethod[] = [...nistMethods, ...legacyMethods];
+
+function PhysicalDestructionModal({
+  device,
+  onClose,
+  onComplete,
+}: {
+  device?: Device;
+  onClose: () => void;
+  onComplete: (data: { technique: string; facility: string; witness: string; operator: string }) => void;
+}) {
+  const [technique, setTechnique] = useState('shredding');
+  const [facility, setFacility] = useState('Forensic Evidence Disposal Vault, Chamber 3');
+  const [witness, setWitness] = useState('Special Agent R. Vance (Badge #4891)');
+  const [operator, setOperator] = useState('A. Patel (Senior Forensic Examiner)');
+  const [certified, setCertified] = useState(false);
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, backgroundColor: 'rgba(16,21,27,0.5)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, padding: 24,
+    }}>
+      <div style={{
+        backgroundColor: '#FFFFFF', borderRadius: 12, width: '100%', maxWidth: 640,
+        boxShadow: '0 8px 32px rgba(16,21,27,0.2)', overflow: 'hidden', maxHeight: '92vh',
+        display: 'flex', flexDirection: 'column',
+      }}>
+        <div style={{ padding: '18px 24px', borderBottom: '1px solid #DDE3EA', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F8FAFC' }}>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <IconShieldLock size={18} style={{ stroke: '#C6394A' }} />
+              Log Physical Media Destruction
+            </div>
+            <div style={{ fontSize: 12, color: '#647184', marginTop: 2 }}>
+              NIST SP 800-88 Rev. 2 §4.3 & IEEE 2883-2022 §6.4 Chain of Custody Protocol
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#647184', padding: 4 }}>
+            <IconX size={16} />
+          </button>
+        </div>
+
+        <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ backgroundColor: '#F1F5F9', borderRadius: 8, padding: '12px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: '#647184' }}>TARGET DEVICE</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#0F172A', marginTop: 2 }}>{device?.name || 'Selected Device'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: '#647184' }}>SERIAL NUMBER</div>
+              <div style={{ fontSize: 12, fontFamily: 'JetBrains Mono, monospace', fontWeight: 600, color: '#0F172A', marginTop: 2 }}>{device?.serial || 'WF2096DW'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, color: '#647184' }}>CAPACITY / TYPE</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#0F172A', marginTop: 2 }}>{device?.capacity || '32 GB'} · {device?.type || 'USB'}</div>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1E293B', marginBottom: 5 }}>
+              Destruction Technique (NIST SP 800-88 / DIN 66399)
+            </label>
+            <select
+              value={technique}
+              onChange={(e) => setTechnique(e.target.value)}
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 6, border: '1.5px solid #CBD5E1', fontSize: 13, color: '#0F172A', backgroundColor: '#FFFFFF' }}
+            >
+              <option value="shredding">Industrial Cross-cut Shredding (≤ 2mm particle size — Level E-4)</option>
+              <option value="disintegration">Mechanical Disintegration & Granulation (Rotary blade disintegrator)</option>
+              <option value="incineration">High-Temperature Incineration (Exceeding 1,000°C Curie point)</option>
+              <option value="degaussing">Degaussing + Mechanical Deformation (Crush & Sheared platen)</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1E293B', marginBottom: 5 }}>
+                Disposal Facility / Vault
+              </label>
+              <input
+                type="text"
+                value={facility}
+                onChange={(e) => setFacility(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1.5px solid #CBD5E1', fontSize: 13, color: '#0F172A' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1E293B', marginBottom: 5 }}>
+                Date & Time (UTC)
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC'}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #E2E8F0', fontSize: 13, color: '#647184', backgroundColor: '#F8FAFC', fontFamily: 'JetBrains Mono, monospace' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1E293B', marginBottom: 5 }}>
+                Authorized Witness (Two-Person Rule)
+              </label>
+              <input
+                type="text"
+                value={witness}
+                onChange={(e) => setWitness(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1.5px solid #CBD5E1', fontSize: 13, color: '#0F172A' }}
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#1E293B', marginBottom: 5 }}>
+                Supervising Examiner
+              </label>
+              <input
+                type="text"
+                value={operator}
+                onChange={(e) => setOperator(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1.5px solid #CBD5E1', fontSize: 13, color: '#0F172A' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ border: '1px solid #E2E8F0', borderRadius: 8, padding: '12px 14px', backgroundColor: '#F8FAFC' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#0F172A' }}>📸 Photographic Destruction Evidence</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: '#16A34A', backgroundColor: '#DCFCE7', padding: '1px 6px', borderRadius: 4 }}>VERIFIED ATTACHMENT</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 6, backgroundColor: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+                🗂️
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>evidence_shred_residue_WF2096DW.jpg</div>
+                <div style={{ fontSize: 11, color: '#647184', fontFamily: 'JetBrains Mono, monospace' }}>SHA-256: 7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069</div>
+              </div>
+            </div>
+          </div>
+
+          <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', padding: '10px 12px', borderRadius: 6, backgroundColor: '#FEF2F2', border: '1px solid #FECACA' }}>
+            <input
+              type="checkbox"
+              checked={certified}
+              onChange={(e) => setCertified(e.target.checked)}
+              style={{ marginTop: 2, accentColor: '#DC2626' }}
+            />
+            <span style={{ fontSize: 12, color: '#991B1B', lineHeight: 1.5, fontWeight: 500 }}>
+              I certify under formal evidentiary chain of custody that the storage media identified above was physically destroyed to unrecognizable particles (≤ 2mm) in accordance with NIST SP 800-88 Rev. 2.
+            </span>
+          </label>
+        </div>
+
+        <div style={{ padding: '14px 24px', borderTop: '1px solid #DDE3EA', display: 'flex', justifyContent: 'flex-end', gap: 10, backgroundColor: '#F8FAFC' }}>
+          <button
+            onClick={onClose}
+            style={{ padding: '9px 16px', borderRadius: 6, border: '1px solid #CBD5E1', backgroundColor: '#FFFFFF', color: '#647184', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+          >
+            Cancel
+          </button>
+          <button
+            disabled={!certified}
+            onClick={() => onComplete({ technique, facility, witness, operator })}
+            style={{
+              padding: '9px 20px', borderRadius: 6, border: 'none',
+              backgroundColor: certified ? '#DC2626' : '#E2E8F0',
+              color: certified ? '#FFFFFF' : '#94A3B8',
+              fontSize: 13, fontWeight: 600, cursor: certified ? 'pointer' : 'not-allowed',
+              display: 'flex', alignItems: 'center', gap: 6,
+            }}
+          >
+            <IconCheck size={14} style={{ stroke: certified ? '#fff' : '#94A3B8' }} />
+            Record Destruction & Issue Certificate
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Erase({ device, navigate }: EraseProps) {
   const [step, setStep] = useState<Step>('configure');
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [showLegacy, setShowLegacy] = useState(false);
   const [dryRun, setDryRun] = useState(false);
-  // #2: Default method based on device type — NVMe SED → crypto erase; USB/SD → overwrite; HDD → NIST Clear
+  const [verificationMode, setVerificationMode] = useState<'full' | 'sample'>('full');
+  const [showDestructionModal, setShowDestructionModal] = useState(false);
+
+  const isUsbOrSd = device?.type === 'USB' || device?.type === 'SD';
+  const isNvme = device?.interface === 'NVMe';
+  const isSed = Boolean(device?.encrypted || isNvme);
+
+  const getMethodSupport = (methodId: string): { supported: boolean; reason?: string } => {
+    if (methodId === 'nist-purge-block') {
+      if (isUsbOrSd) {
+        return {
+          supported: false,
+          reason: 'Not supported by this device. USB drives do not provide a Sanitize command.',
+        };
+      }
+    }
+    if (methodId === 'nist-purge-crypto') {
+      if (isUsbOrSd || !isSed) {
+        return {
+          supported: false,
+          reason: isUsbOrSd
+            ? 'Not supported by this device. This drive is not self-encrypting.'
+            : 'Not supported by this device. SED hardware encryption not detected.',
+        };
+      }
+    }
+    return { supported: true };
+  };
+
+  const estimatedEraseTime = isNvme
+    ? '< 30 sec (Crypto Key Destruction)'
+    : isUsbOrSd
+      ? '~8–12 min (Single-pass @ 45 MB/s)'
+      : '~1.5 hr (Full surface write)';
+
   const getDefaultMethod = (dev?: Device) => {
     if (!dev) return 'nist-clear';
     if (dev.interface === 'NVMe') return 'nist-purge-crypto';
-    if (dev.type === 'USB' || dev.type === 'SD') return 'nist-clear';
     return 'nist-clear';
   };
+
   const [selectedMethod, setSelectedMethod] = useState(() => getDefaultMethod(device));
   const [serialInput, setSerialInput] = useState('');
   const [progress, setProgress] = useState(0);
@@ -186,20 +447,39 @@ export default function Erase({ device, navigate }: EraseProps) {
   const deviceSerial = device?.serial ?? 'WF2096DW';
   const last4 = deviceSerial.slice(-4);
   const serialMatch = serialInput === last4;
-  const isNvme = device?.interface === 'NVMe';
   const firmwareStatus = device?.firmwareStatus;
   const showFirmwareWarning = (firmwareStatus === 'unverified' || firmwareStatus === 'unreliable') && step === 'configure';
+
+  const handleCompleteDestruction = (destroyData: { technique: string; facility: string; witness: string; operator: string }) => {
+    const recAttempts = [{ attemptNum: 1, method: `Physical Destruction (${destroyData.technique})`, result: 'success' as const }];
+    setAttempts(recAttempts);
+    if (device) {
+      recordEraseCompleted({
+        caseId: '2024-CF-0892',
+        caseName: 'State v. Meridian Corp',
+        device,
+        selectedMethod: 'nist-destroy',
+        methodLabel: 'NIST Destroy: Physical Destruction',
+        status: 'verified',
+        entropy: 0.00,
+        attempts: recAttempts,
+      });
+    }
+    setShowDestructionModal(false);
+    setStep('verified');
+  };
 
   useEffect(() => {
     if (step !== 'erasing') return;
     setProgress(0);
-    setEntropy(0);
+    setEntropy(selectedMethod === 'nist-clear' ? 7.8 : 0);
     setPhaseLabel('Erasing…');
     intervalRef.current = window.setInterval(() => {
       setProgress((p) => {
         if (p >= 100) {
           clearInterval(intervalRef.current);
           const currentMethod = eraseMethods.find(m => m.id === selectedMethod)?.label ?? selectedMethod;
+          const finalEntropy = selectedMethod === 'nist-clear' ? 0.002 : 7.998;
           setTimeout(() => {
             // USP 5: first attempt with unreliable device fails
             if (simulateFail && attemptNumRef.current === 1) {
@@ -213,7 +493,7 @@ export default function Erase({ device, navigate }: EraseProps) {
                   selectedMethod,
                   methodLabel: currentMethod,
                   status: 'failed',
-                  entropy: 7.201,
+                  entropy: 4.21,
                   attempts: recAttempts,
                 });
               }
@@ -229,7 +509,7 @@ export default function Erase({ device, navigate }: EraseProps) {
                   selectedMethod,
                   methodLabel: currentMethod,
                   status: 'verified',
-                  entropy: 7.998,
+                  entropy: finalEntropy,
                   attempts: recAttempts,
                 });
               }
@@ -241,12 +521,16 @@ export default function Erase({ device, navigate }: EraseProps) {
         const next = Math.min(p + 0.5, 100);
         const phase = erasePhases.find(ph => next >= ph.progress[0] && next < ph.progress[1]);
         if (phase) setPhaseLabel(phase.label + '…');
-        setEntropy(Math.min(8.0, next / 100 * 8.0));
+        if (selectedMethod === 'nist-clear') {
+          setEntropy(Math.max(0.00, 7.8 - (next / 100 * 7.8)));
+        } else {
+          setEntropy(Math.min(8.0, next / 100 * 8.0));
+        }
         return next;
       });
     }, 100);
     return () => clearInterval(intervalRef.current);
-  }, [step]);
+  }, [step, selectedMethod]);
 
   const handleRetry = (newMethod: string) => {
     attemptNumRef.current += 1;
@@ -339,20 +623,45 @@ export default function Erase({ device, navigate }: EraseProps) {
         <div style={{ maxWidth: 600 }}>
           {device.isSystemDrive && (
             <div style={{
-              backgroundColor: '#EFF6FF', border: '1.5px solid #93C5FD', borderRadius: 10,
+              backgroundColor: '#FEF2F2', border: '1.5px solid #F87171', borderRadius: 10,
               padding: '14px 18px', marginBottom: 18, display: 'flex', gap: 12, alignItems: 'flex-start',
             }}>
-              <IconShieldCheck size={20} style={{ stroke: '#2563EB', flexShrink: 0, marginTop: 2 }} />
+              <IconAlertTriangle size={20} style={{ stroke: '#DC2626', flexShrink: 0, marginTop: 2 }} />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#1E40AF', marginBottom: 2 }}>
-                  Host System Drive (Live OS) — Erase Protocol Active
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#991B1B', marginBottom: 2 }}>
+                  Safety Lock Active — Host Boot OS Drive
                 </div>
-                <div style={{ fontSize: 12, color: '#1E3A8A', lineHeight: 1.5 }}>
-                  Target: <strong>{deviceName}</strong> ({device.capacity} · {device.interface}). Sanitization pipeline is unlocked for this device. You can configure purge methods, confirm serial authorization, and execute full erasure with live entropy verification and tamper-proof certificate generation.
+                <div style={{ fontSize: 12, color: '#7F1D1D', lineHeight: 1.5 }}>
+                  Target: <strong>{deviceName}</strong> ({device.capacity} · {device.interface}). Software erasure of the active host operating system drive is locked in this session to protect the forensic workstation. To sanitize host drives, boot REFORGE via external live USB media.
                 </div>
               </div>
             </div>
           )}
+
+          {/* Device facts panel */}
+          <div style={{
+            backgroundColor: '#FFFFFF', borderRadius: 10, padding: '14px 18px',
+            border: '1px solid #DDE3EA', marginBottom: 14,
+            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12,
+          }}>
+            <div>
+              <div style={{ fontSize: 10, color: '#647184', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 2 }}>CAPACITY</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>{device?.capacity || '32 GB'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: '#647184', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 2 }}>INTERFACE</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>{device?.interface || 'USB 3.0'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: '#647184', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 2 }}>MEDIA TYPE</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#1A2330' }}>{isUsbOrSd ? 'USB Flash (NAND)' : isNvme ? 'NVMe SSD' : `${device?.type || 'Drive'}`}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: '#647184', fontWeight: 600, letterSpacing: '0.04em', marginBottom: 2 }}>EST. TIME</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#1E8F7A' }}>{estimatedEraseTime}</div>
+            </div>
+          </div>
+
           {/* USP 3b: Firmware warning callout — shows when firmware is amber/red */}
           {showFirmwareWarning && (
             <div style={{
@@ -389,13 +698,13 @@ export default function Erase({ device, navigate }: EraseProps) {
           {/* Recommended method card */}
           <div
             style={{
-              backgroundColor: '#FFFFFF', borderRadius: 10, padding: '22px 24px',
+              backgroundColor: '#FFFFFF', borderRadius: 10, padding: '20px 22px',
               border: '1.5px solid #1E8F7A',
               boxShadow: '0 0 0 3px rgba(30,143,122,0.08)',
               marginBottom: 14,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <div
                 style={{
                   fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
@@ -405,16 +714,19 @@ export default function Erase({ device, navigate }: EraseProps) {
                 RECOMMENDED
               </div>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: '#1A2330', marginBottom: 6 }}>
-              {isNvme ? 'NIST Purge: Crypto Erase' : (device?.type === 'USB' || device?.type === 'SD') ? 'NIST Clear: Overwrite' : 'NIST Clear: Overwrite'}
+            <div style={{ fontSize: 15, fontWeight: 700, color: '#1A2330', marginBottom: 6 }}>
+              {isNvme ? 'NIST Purge: Crypto Erase' : 'NIST Clear: Overwrite'}
             </div>
-            <div style={{ fontSize: 13, color: '#647184', lineHeight: 1.6 }}>
+            <div style={{ fontSize: 13, color: '#4B5563', lineHeight: 1.6 }}>
               {isNvme
-                ? 'This drive is an NVMe SSD. Crypto Erase destroys the internal encryption key, rendering all data instantly unrecoverable — NIST SP 800-88 Rev. 2 Purge compliant.'
-                : (device?.type === 'USB' || device?.type === 'SD')
-                  ? 'Single-pass overwrite of all user-addressable space on this flash storage device. NIST SP 800-88 Rev. 2 Clear method. Appropriate for USB/SD flash media.'
-                  : 'Single-pass overwrite of all user-addressable space. NIST SP 800-88 Rev. 2 Clear method. Appropriate for HDDs and removable magnetic media.'}
+                ? 'Destroys the drive\'s internal encryption key, making all stored data cryptographically inaccessible. Meets NIST SP 800-88 Rev. 2 Purge.'
+                : 'Single-pass overwrite of all user-accessible storage on this device. Meets NIST SP 800-88 Rev. 2 Clear.'}
             </div>
+            {isUsbOrSd && (
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #E5E7EB', fontSize: 12, color: '#6B7280', lineHeight: 1.5 }}>
+                <strong style={{ color: '#374151' }}>Assurance level: Clear.</strong> This protects against standard recovery tools. USB drives do not support Purge commands, so for highly sensitive data, physical destruction is required.
+              </div>
+            )}
           </div>
 
           {/* Dry run toggle */}
@@ -428,7 +740,7 @@ export default function Erase({ device, navigate }: EraseProps) {
               value={dryRun}
               onChange={setDryRun}
               label="Dry Run — simulate only, no data destroyed"
-              description="Runs the full erasure workflow without writing to the device. Use to validate the process before committing."
+              description="Runs the full erasure workflow without writing to the device. Use this to test the process before committing."
             />
             {dryRun && (
               <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, backgroundColor: '#FEF8EC', border: '1px solid #F0D890' }}>
@@ -438,6 +750,57 @@ export default function Erase({ device, navigate }: EraseProps) {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Verification setting */}
+          <div
+            style={{
+              backgroundColor: '#FFFFFF', borderRadius: 10, padding: '14px 18px',
+              border: '1px solid #DDE3EA', marginBottom: 14,
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#1A2330', marginBottom: 2 }}>
+              Post-Erase Verification Setting
+            </div>
+            <div style={{ fontSize: 12, color: '#647184', marginBottom: 10 }}>
+              Select read-back verification coverage per NIST SP 800-88 §4.8 & IEEE 2883-2022.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 6,
+                border: `1.5px solid ${verificationMode === 'full' ? '#1E8F7A' : '#DDE3EA'}`,
+                backgroundColor: verificationMode === 'full' ? '#F8FDFC' : '#FFFFFF', cursor: 'pointer',
+              }}>
+                <input
+                  type="radio"
+                  name="verifMode"
+                  checked={verificationMode === 'full'}
+                  onChange={() => setVerificationMode('full')}
+                  style={{ accentColor: '#1E8F7A' }}
+                />
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#1A2330' }}>Full Read-Back (100%)</div>
+                  <div style={{ fontSize: 11, color: '#647184' }}>Exhaustive LBA sector sweep</div>
+                </div>
+              </label>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 6,
+                border: `1.5px solid ${verificationMode === 'sample' ? '#1E8F7A' : '#DDE3EA'}`,
+                backgroundColor: verificationMode === 'sample' ? '#F8FDFC' : '#FFFFFF', cursor: 'pointer',
+              }}>
+                <input
+                  type="radio"
+                  name="verifMode"
+                  checked={verificationMode === 'sample'}
+                  onChange={() => setVerificationMode('sample')}
+                  style={{ accentColor: '#1E8F7A' }}
+                />
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#1A2330' }}>Statistical Sample (10%)</div>
+                  <div style={{ fontSize: 11, color: '#647184' }}>Pseudo-random block sample</div>
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* Advanced section */}
@@ -454,7 +817,7 @@ export default function Erase({ device, navigate }: EraseProps) {
                 background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Inter, system-ui, sans-serif',
               }}
             >
-              <span style={{ fontSize: 13, fontWeight: 500, color: '#647184' }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#1A2330' }}>
                 Advanced: override erase method
               </span>
               {advancedOpen ? <IconChevronUp size={16} style={{ stroke: '#647184' }} /> : <IconChevronDown size={16} style={{ stroke: '#647184' }} />}
@@ -462,62 +825,166 @@ export default function Erase({ device, navigate }: EraseProps) {
 
             {advancedOpen && (
               <div style={{ borderTop: '1px solid #DDE3EA', padding: '16px 20px' }}>
-                <div style={{ fontSize: 12, color: '#647184', marginBottom: 12 }}>
-                  Override the recommended method. NIST SP 800-88 Rev. 2 methods are listed first. Legacy methods (DoD/Gutmann) are retained for organizational compliance requirements — they have been superseded by NIST for modern media.
+                <div style={{ fontSize: 12, color: '#647184', marginBottom: 14, lineHeight: 1.5 }}>
+                  Override the recommended method. Methods this device does not support are disabled. Legacy methods are kept only for organisations whose policies still require them.
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {eraseMethods.map((method) => {
-                    const isLegacy = method.nistLevel === 'Legacy';
+                  {nistMethods.map((method) => {
+                    const support = getMethodSupport(method.id);
+                    const isSelected = selectedMethod === method.id;
+                    const isDisabled = !support.supported;
+
                     return (
                       <label
                         key={method.id}
+                        onClick={(e) => {
+                          if (isDisabled) e.preventDefault();
+                        }}
                         style={{
                           display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 8,
-                          border: `1.5px solid ${selectedMethod === method.id ? '#1E8F7A' : isLegacy ? '#F0D890' : '#DDE3EA'}`,
-                          backgroundColor: selectedMethod === method.id ? '#F8FDFC' : isLegacy ? '#FFFDF5' : '#FFFFFF',
-                          cursor: 'pointer', transition: 'all 0.1s ease',
+                          border: `1.5px solid ${isSelected ? '#1E8F7A' : isDisabled ? '#E2E8F0' : '#DDE3EA'}`,
+                          backgroundColor: isSelected ? '#F8FDFC' : isDisabled ? '#F8FAFC' : '#FFFFFF',
+                          opacity: isDisabled ? 0.65 : 1,
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                          transition: 'all 0.1s ease',
                         }}
                       >
                         <input
                           type="radio"
                           name="eraseMethod"
                           value={method.id}
-                          checked={selectedMethod === method.id}
-                          onChange={() => setSelectedMethod(method.id)}
-                          style={{ flexShrink: 0, marginTop: 2, accentColor: '#1E8F7A' }}
+                          disabled={isDisabled}
+                          checked={isSelected}
+                          onChange={() => {
+                            if (!isDisabled) setSelectedMethod(method.id);
+                          }}
+                          style={{ flexShrink: 0, marginTop: 2, accentColor: '#1E8F7A', cursor: isDisabled ? 'not-allowed' : 'pointer' }}
                         />
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: 13, fontWeight: 500, color: '#1A2330' }}>{method.label}</span>
-                            {isLegacy && (
-                              <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 3, backgroundColor: '#FEF8EC', color: '#B8862E', border: '1px solid #F0D890' }}>LEGACY</span>
-                            )}
-                            {!isLegacy && (
-                              <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 3, backgroundColor: '#EDFAF3', color: '#2E9E5B', border: '1px solid #A8E6C3' }}>{method.nistLevel}</span>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: isDisabled ? '#647184' : '#1A2330' }}>
+                              {method.label}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 3,
+                                backgroundColor: isDisabled ? '#F1F5F9' : '#EDFAF3',
+                                color: isDisabled ? '#647184' : '#2E9E5B',
+                                border: `1px solid ${isDisabled ? '#CBD5E1' : '#A8E6C3'}`,
+                              }}
+                            >
+                              {method.badge}
+                            </span>
+                            {isDisabled && (
+                              <span
+                                style={{
+                                  fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 3,
+                                  backgroundColor: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA',
+                                }}
+                              >
+                                NOT SUPPORTED
+                              </span>
                             )}
                           </div>
-                          <div style={{ fontSize: 12, color: '#647184', marginTop: 3, lineHeight: 1.5 }}>{method.description}</div>
+                          <div style={{ fontSize: 12, color: isDisabled ? '#C6394A' : '#647184', marginTop: 3, lineHeight: 1.5, fontStyle: isDisabled ? 'italic' : 'normal' }}>
+                            {isDisabled && support.reason ? support.reason : method.description}
+                          </div>
                         </div>
                       </label>
                     );
                   })}
+                </div>
+
+                {/* Legacy methods section behind toggle */}
+                <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px dashed #DDE3EA' }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowLegacy(!showLegacy)}
+                    style={{
+                      background: 'none', border: 'none', padding: '4px 0',
+                      color: '#647184', fontSize: 12, fontWeight: 500, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Inter, system-ui, sans-serif',
+                    }}
+                  >
+                    {showLegacy ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+                    <span>{showLegacy ? 'Hide legacy methods' : 'Show legacy methods'}</span>
+                  </button>
+
+                  {showLegacy && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                      {legacyMethods.map((method) => {
+                        const isSelected = selectedMethod === method.id;
+                        return (
+                          <label
+                            key={method.id}
+                            style={{
+                              display: 'flex', gap: 12, padding: '12px 14px', borderRadius: 8,
+                              border: `1.5px solid ${isSelected ? '#1E8F7A' : '#F0D890'}`,
+                              backgroundColor: isSelected ? '#F8FDFC' : '#FFFDF5',
+                              cursor: 'pointer', transition: 'all 0.1s ease',
+                            }}
+                          >
+                            <input
+                              type="radio"
+                              name="eraseMethod"
+                              value={method.id}
+                              checked={isSelected}
+                              onChange={() => setSelectedMethod(method.id)}
+                              style={{ flexShrink: 0, marginTop: 2, accentColor: '#1E8F7A' }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: 13, fontWeight: 500, color: '#1A2330' }}>{method.label}</span>
+                                <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 6px', borderRadius: 3, backgroundColor: '#FEF8EC', color: '#B8862E', border: '1px solid #F0D890' }}>
+                                  LEGACY
+                                </span>
+                              </div>
+                              <div style={{ fontSize: 12, color: '#647184', marginTop: 3, lineHeight: 1.5 }}>
+                                {method.description}
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
           <button
-            onClick={() => setStep('confirm')}
+            disabled={device.isSystemDrive}
+            onClick={() => {
+              if (selectedMethod === 'nist-destroy') {
+                setShowDestructionModal(true);
+              } else {
+                setStep('confirm');
+              }
+            }}
             style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '11px 24px',
-              borderRadius: 8, border: 'none', backgroundColor: '#C6394A', color: '#FFFFFF',
-              fontWeight: 600, fontSize: 14, cursor: 'pointer',
+              borderRadius: 8, border: 'none',
+              backgroundColor: device.isSystemDrive ? '#CBD5E1' : selectedMethod === 'nist-destroy' ? '#1E293B' : '#C6394A',
+              color: '#FFFFFF',
+              fontWeight: 600, fontSize: 14,
+              cursor: device.isSystemDrive ? 'not-allowed' : 'pointer',
               fontFamily: 'Inter, system-ui, sans-serif',
+              boxShadow: device.isSystemDrive ? 'none' : '0 2px 6px rgba(198,57,74,0.3)',
+              transition: 'background-color 0.15s ease',
             }}
           >
-            Proceed to Confirmation
+            {selectedMethod === 'nist-destroy' ? 'Log Physical Destruction →' : 'Proceed to Confirmation →'}
             <IconArrowRight size={14} style={{ stroke: '#fff' }} />
           </button>
+
+          {showDestructionModal && (
+            <PhysicalDestructionModal
+              device={device}
+              onClose={() => setShowDestructionModal(false)}
+              onComplete={handleCompleteDestruction}
+            />
+          )}
         </div>
       )}
 
@@ -729,9 +1196,13 @@ export default function Erase({ device, navigate }: EraseProps) {
                 <span style={{ fontSize: 11, color: '#4C5FC7' }}>8.00 (maximum entropy)</span>
               </div>
               <div style={{ fontSize: 12, color: '#647184', marginTop: 8, lineHeight: 1.5 }}>
-                {selectedMethod === 'nist-clear' || selectedMethod === 'dod-7pass' || selectedMethod === 'gutmann-35pass'
-                  ? 'For overwrite methods, post-wipe entropy near 0.00 is expected — the drive is filled with a defined pattern (not random data). The adversarial recovery scan is the primary verification.'
-                  : 'For crypto erase methods, post-wipe entropy near 8.00 bits/byte is expected — residual ciphertext appears fully random. The adversarial scan confirms no key remnants remain.'}
+                {selectedMethod === 'nist-clear' ? (
+                  'For NIST Clear single-pass overwrite (all zeros), post-wipe entropy near 0.00 bits/byte is expected. The adversarial recovery scan verifies zero non-zero bytes remain across all addressable sectors.'
+                ) : selectedMethod === 'dod-3pass' ? (
+                  'For DoD 5220.22-M 3-pass overwrite, the final pass writes pseudorandom data, so post-wipe entropy near 8.00 bits/byte is expected. The adversarial recovery scan verifies pattern dispersion.'
+                ) : (
+                  'For crypto erase and sanitize purge methods, post-wipe entropy near 8.00 bits/byte is expected — residual ciphertext appears fully random. The adversarial scan confirms no key remnants remain.'
+                )}
               </div>
             </div>
           </div>
@@ -752,25 +1223,39 @@ export default function Erase({ device, navigate }: EraseProps) {
             <div
               style={{
                 padding: '20px 22px', borderRadius: 10,
-                backgroundColor: '#EDFAF3', border: '1.5px solid #A8E6C3',
+                backgroundColor: selectedMethod === 'nist-destroy' ? '#F8FAFC' : '#EDFAF3',
+                border: `1.5px solid ${selectedMethod === 'nist-destroy' ? '#CBD5E1' : '#A8E6C3'}`,
                 display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 24,
               }}
             >
               <div
                 style={{
-                  width: 44, height: 44, borderRadius: '50%', backgroundColor: '#2E9E5B',
+                  width: 44, height: 44, borderRadius: '50%',
+                  backgroundColor: selectedMethod === 'nist-destroy' ? '#1E293B' : '#2E9E5B',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                 }}
               >
-                <IconShieldCheck size={22} style={{ stroke: '#fff' }} />
+                {selectedMethod === 'nist-destroy' ? (
+                  <IconShieldLock size={22} style={{ stroke: '#fff' }} />
+                ) : (
+                  <IconShieldCheck size={22} style={{ stroke: '#fff' }} />
+                )}
               </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#1A2330', marginBottom: 4 }}>
-                  Erasure Independently Verified
+                  {selectedMethod === 'nist-destroy' ? 'Physical Destruction Documented & Certified' : 'Erasure Independently Verified'}
                 </div>
-                <div style={{ fontSize: 13, color: '#2E6E40', lineHeight: 1.6 }}>
-                  0 recoverable signatures found. Post-wipe adversarial recovery scan detected no remnant data patterns.
-                  Entropy: <strong style={{ fontFamily: 'JetBrains Mono, monospace' }}>7.998 bits/byte</strong>.
+                <div style={{ fontSize: 13, color: selectedMethod === 'nist-destroy' ? '#475569' : '#2E6E40', lineHeight: 1.6 }}>
+                  {selectedMethod === 'nist-destroy' ? (
+                    <>
+                      Witness log recorded and cross-signed under chain-of-custody protocol. Media serial <strong>{deviceSerial}</strong> permanently destroyed per NIST SP 800-88 Rev. 2 standards.
+                    </>
+                  ) : (
+                    <>
+                      0 recoverable signatures found. Post-wipe adversarial recovery scan detected no remnant data patterns.
+                      Entropy: <strong style={{ fontFamily: 'JetBrains Mono, monospace' }}>{selectedMethod === 'nist-clear' ? '0.002' : '7.998'} bits/byte</strong>.
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -778,9 +1263,21 @@ export default function Erase({ device, navigate }: EraseProps) {
             {/* Metrics */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
               {[
-                { label: 'Erase Method', value: eraseMethods.find(m => m.id === selectedMethod)?.label.split(' (')[0] ?? 'Sanitize', sub: '—' },
-                { label: 'Final Entropy', value: '7.998', sub: 'bits/byte' },
-                { label: 'Remnant Signatures', value: '0', sub: 'found' },
+                {
+                  label: 'Sanitization Method',
+                  value: selectedMethod === 'nist-destroy' ? 'Physical Destroy' : (eraseMethods.find(m => m.id === selectedMethod)?.label.split(' (')[0] ?? 'NIST Clear'),
+                  sub: selectedMethod === 'nist-destroy' ? 'NIST SP 800-88' : '—',
+                },
+                {
+                  label: selectedMethod === 'nist-destroy' ? 'Witness Verified' : 'Final Entropy',
+                  value: selectedMethod === 'nist-destroy' ? '2-Officer Sign' : (selectedMethod === 'nist-clear' ? '0.002' : '7.998'),
+                  sub: selectedMethod === 'nist-destroy' ? 'Chain of Custody' : 'bits/byte',
+                },
+                {
+                  label: selectedMethod === 'nist-destroy' ? 'Physical State' : 'Remnant Signatures',
+                  value: selectedMethod === 'nist-destroy' ? 'Disintegrated' : '0',
+                  sub: selectedMethod === 'nist-destroy' ? 'Residue ≤ 2mm' : 'found',
+                },
               ].map(({ label, value, sub }) => (
                 <div key={label} style={{ padding: '12px 14px', backgroundColor: '#F5F7FA', borderRadius: 8, textAlign: 'center' }}>
                   <div style={{ fontSize: 11, fontWeight: 500, color: '#647184', marginBottom: 4 }}>{label}</div>
@@ -827,7 +1324,7 @@ export default function Erase({ device, navigate }: EraseProps) {
               }}
             >
               <IconCertificate size={16} style={{ stroke: '#1E8F7A' }} />
-              View Certificate of Sanitization
+              {selectedMethod === 'nist-destroy' ? 'View Certificate of Destruction' : 'View Certificate of Sanitization'}
             </button>
 
             <button
@@ -914,7 +1411,7 @@ export default function Erase({ device, navigate }: EraseProps) {
                 </div>
               </div>
               <button
-                onClick={() => handleRetry('crypto-erase')}
+                onClick={() => handleRetry('nist-purge-crypto')}
                 style={{
                   width: '100%', padding: '11px', borderRadius: 8, border: 'none',
                   backgroundColor: '#4C5FC7', color: '#FFFFFF', fontWeight: 600, fontSize: 14,
